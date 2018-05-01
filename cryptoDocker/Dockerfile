@@ -6,10 +6,10 @@ RUN add-apt-repository ppa:bitcoin/bitcoin
 
 RUN apt-get update
 RUN apt-get install -y bitcoind
-RUN mkdir ~/.bitcoin/ && cd ~/.bitcoin/
+RUN mkdir /root/.bitcoin/
 
 
 
-COPY bitcoin.conf ~/.bitcoin/
+COPY bitcoin.conf /root/.bitcoin/
 
 CMD ["bitcoind"]

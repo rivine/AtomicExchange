@@ -10,7 +10,7 @@ import atomicswap_pb2_grpc
 
 def run():
     channel = grpc.insecure_channel('localhost:50051')
-    stub = atomicswap_pb2_grpc.GreeterStub(channel)
+    stub = atomicswap_pb2_grpc.AtomicSwapStub(channel)
     response = stub.AcceptInitiate(atomicswap_pb2.InitiatorSmartContractCreated(hash='8341309506'))
 
     print("AcceptorSmartContractReceived: " + response.hash)
