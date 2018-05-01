@@ -1,0 +1,19 @@
+version: "3"
+services:
+  cryptodocker:
+    container_name: cryptodocker
+    hostname: cryptodocker
+    build: 
+      context: ./
+      dockerfile: Dockerfile
+    image: cryptodocker
+    ports: 
+      - "8000:8000"
+    networks:
+      jimber:
+        aliases:
+          - jimber
+networks:
+  jimber:
+    external:
+      name: jimber
