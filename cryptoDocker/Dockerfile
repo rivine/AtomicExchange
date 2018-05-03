@@ -11,5 +11,5 @@ RUN mkdir /root/.bitcoin/
 
 
 COPY bitcoin.conf /root/.bitcoin/
-
+COPY btcatomicswap /bin/
 CMD ["bitcoind"]

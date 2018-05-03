@@ -8,9 +8,10 @@ package helloworld;
 service AtomicSwap {
 
   //rpc AcceptInitiate (InitiatorSmartContractCreated) returns (AcceptorSmartContractCreated) {}
- 
+  rpc ProcessInitiate(Initiate) returns (InitiateReply) {}
+  rpc ProcessInitiateSwap(InitiateSwap) returns (AcceptSwap) {}
+  rpc ProcessRedeemed(RedeemFinished) returns (RedeemFinished) {}
 }
-
 
 message Initiate {
   double initiator_amount = 1;
@@ -35,4 +36,3 @@ message AcceptSwap {
 message RedeemFinished {
   bool finished = 1;
 }
-
