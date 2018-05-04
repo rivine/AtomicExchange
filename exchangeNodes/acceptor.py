@@ -31,6 +31,7 @@ class AtomicSwap(atomicswap_pb2_grpc.AtomicSwapServicer):
 
     def ProcessInitiate(self, request, context):
         global bitcoinaddress
+        
         print("Acceptor: processInitiated")
         print(request.initiator_amount)
         bitcoinaddress = execute('echo 123456789'.rstrip()) #bitcoin-cli gentnewaddress "" legacy
@@ -41,21 +42,39 @@ class AtomicSwap(atomicswap_pb2_grpc.AtomicSwapServicer):
         return False
     
     def ProcessInitiateSwap(self, request, context):
+        global contractAddress
+        global initiator_contract
+        global initiator_transaction
+
         print("processInitiateSwap")
         print(execute('echo {\\"lockTime\\" : \\"48\\", \\"contractValue\\" : \\"5678\\", \\"recipientAddress\\" : \\"123456789\\"}'))
         btc_audit_json =  execute('echo {\\"lockTime\\" : \\"48\\", \\"contractValue\\" : \\"5678\\", \\"recipientAddress\\" : \\"123456789\\"}')#execute('btcatomicswap --testnet auditcontract {} {}'.format(request.contract, request.transaction))
         btc_audit = json2obj(btc_audit_json)
+        initiator_contract = request.contract
+        initiator_transaction = request.transaction
         print("{} > {}".format(btc_audit.lockTime, 40))
         print("{} = {}".format(btc_audit.contractValue, initiator_amount))
         print("{} = {}".format(btc_audit.recipientAddress, bitcoinaddress))
+
+
         if(int(btc_audit.lockTime) < 40 or btc_audit.contractValue != initiator_amount or btc_audit.recipientAddress != bitcoinaddress):
             print("Contract invalid")
             return False
+        rivinec_atomicswap_json = execute('echo {\\"contractAddress\\" : \\"contr123456\\"}')  #rivinec atomicswap --testnet participate {{initiate_swap.initiator_wallet}} {{acceptor_amount}} {{initiate_swap.hash}}"
+        rivinec_atomicswap = json2obj(rivinec_atomicswap_json)
+        contractAddress = rivinec_atomicswap.contractAddress
+        return atomicswap_pb2.AcceptSwap(acceptor_swap_address=rivinec_atomicswap.contractAddress)
 
-        return atomicswap_pb2.AcceptSwap()
 
     def ProcessRedeemed(self,request,context):
-        print("ProcessRedeemed")
+        global contractAddress
+        global initiator_transaction
+        print("Acceptor: ProcessRedeemed")
+
+        get_secret = "rivinec --addr explorer.testnet.threefoldtoken.com extractsecret {}".format(contractAddress)
+
+        redeem_cmd = "btcatomicswap --testnet --rpcuser=user --rpcpass=pass redeem {} {} {}".format(initiator_contract, initiator_transaction, contractAddress)
+        print(redeem_cmd)
         return atomicswap_pb2.RedeemFinished(finished=True)
         
 
@@ -73,6 +92,9 @@ def serve():
 initiator_amount = 0
 acceptor_amount = 0
 bitcoinaddress = ""
+contractAddress = ""
+initiator_contract = ""
+initiator_transaction = ""
 
 if __name__ == '__main__':
 
