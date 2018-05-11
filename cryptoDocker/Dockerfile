@@ -23,6 +23,6 @@ RUN go get -u github.com/threefoldfoundation/tfchain/cmd/...
 COPY bitcoin.conf /root/.bitcoin/
 COPY btcatomicswap /bin/
 #CMD ["bitcoind"]
-CMD bitcoind & && tfchaind --network testnet
+CMD bitcoind -daemon && tfchaind --network testnet
 
 #
