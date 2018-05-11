@@ -13,6 +13,8 @@ Flow overview:
 
 ![exchangeflow](exchangeflow.png)
 
+This is a simplified flow since Blockchain technology needs time to get the nodes into sync. It will be required to poll the Blockchain (or get an event) to continue the flow when the required data is available.
+
 ## Docker
 In a first phase a Dockerfile was created using to install both the bitcoind and tfchain binaries/daemons. The Docker has both scripts at disposal and can be used to easily initiate a swap.
 
