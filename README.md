@@ -27,4 +27,5 @@ In a first phase a Dockerfile was created using to install both the bitcoind and
 * Do manual swap
 * Add timers/checks in script where it is required
 * Do automatic swap
-* Finetuning
+* Finetuning of script
+* Add Zerotier to docker so swap is possible in different networks
