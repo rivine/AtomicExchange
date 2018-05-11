@@ -29,3 +29,7 @@ In a first phase a Dockerfile was created using to install both the bitcoind and
 * Do automatic swap
 * Finetuning of script
 * Add Zerotier to docker so swap is possible in different networks
+
+## Links
+[atomic swap documentation](https://github.com/rivine/rivine/blob/master/doc/atomicswap/atomicswap.md)
+[Rivine repositories](https://github.com/rivine/rivine)
