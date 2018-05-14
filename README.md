@@ -15,6 +15,13 @@ Flow overview:
 
 This is a simplified flow since Blockchain technology needs time to get the nodes into sync. It will be required to poll the Blockchain (or get an event) to continue the flow when the required data is available.
 
+## Architecture 
+
+![architecture](architecture.png)
+
+Two environments will be needed. One will contain full blockchain nodes (or the least implementation needed for a simple wallet). Another one will contain the command line tools (bitcoin-cli / rivinec) to communicate with the nodes and all the required scripts and Ui implementation. In a later phase an orderbook will be added and we will use distributed lightweight wallets.
+
+
 ## Docker
 In a first phase a Dockerfile was created using to install both the bitcoind and tfchain binaries/daemons. The Docker has both scripts at disposal and can be used to easily initiate a swap.
 
