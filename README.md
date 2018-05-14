@@ -27,6 +27,7 @@ In a first phase a Dockerfile was created using to install both the bitcoind and
 * ~~Adjust btcatomic swap binaries for json output~~
 * Adjust rivine/tfchain binaries for json output
 * Do manual swap
+* Adjust .md file to match output
 * Add timers/checks in script where it is required
 * Do automatic swap
 * Finetuning of script
