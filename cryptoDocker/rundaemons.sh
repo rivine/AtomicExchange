@@ -4,6 +4,6 @@
 bitcoind -daemon
 
 # Start the second process
-tfchaind --network testnet &
+tfchaind --network testnet -M cgtewb &
 
 /bin/bash
