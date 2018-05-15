@@ -12,16 +12,26 @@ import os
 import json
 from collections import namedtuple
 
+from dry_run import InitiatorDryRun
+
 def _json_object_hook(d): return namedtuple('X', d.keys())(*d.values())
 def json2obj(data): return json.loads(data, object_hook=_json_object_hook)
 
 
 def execute(process):
+    
+    global dry_run
+
+    if dry_run:
+        dry = InitiatorDryRun()
+        return dry.processCommand(process)
+    
+
     process = os.popen(process)
     output = reprocessed = process.read()
     process.close()
+    
     return output.rstrip()
-
 
 def run(initiator_amount, acceptor_amount):
     channel = grpc.insecure_channel('localhost:50051')
@@ -32,17 +42,14 @@ def run(initiator_amount, acceptor_amount):
     #response.python -m pip install grpcio
     print("Initiator: ")
     print(response.acceptor_address)
-    #btc_atomicswap_json = Execute("btcatomicswap --testnet --rpcuser=user --rpcpass=pass initiate {} {}" % response.acceptor_address, initiator_amount)
+    btc_atomicswap_json = execute("btcatomicswap --testnet --rpcuser=user --rpcpass=pass initiate {} {}".format(response.acceptor_address, initiator_amount))
     #do atomic swap
-    print("btcatomicswap --testnet --rpcuser=user --rpcpass=pass initiate {} {}".format(response.acceptor_address, initiator_amount))
 
-    btc_atomicswap_json = "{ \"secret\" : \"12345789\", \"hash\" : \"abc12345678098\", \"contractfee\" : \"0.2\", \"refundfee\" : \"0.1\", \"contract\" : \"54345678\", \"contractTransaction\" : \"tx123456\" }"
-
-    print(btc_atomicswap_json)
 
     btc_atomicswap = json2obj(btc_atomicswap_json)
     
-    initiator_wallet_address =  execute("echo 099765432")  #`rivinec wallet address`
+    
+    initiator_wallet_address =  execute("rivinec wallet address")
     
 
     response = stub.ProcessInitiateSwap(atomicswap_pb2.InitiateSwap(hash=btc_atomicswap.hash, contract=btc_atomicswap.contract, transaction=btc_atomicswap.contractTransaction, initiator_wallet_address=initiator_wallet_address))
@@ -51,7 +58,7 @@ def run(initiator_amount, acceptor_amount):
     print("Initiator acceptor_swap_address {}".format(acceptor_swap_address))
 
 
-    audit_swap_json = execute('echo {\\"contractValue\\" : \\"1234\\", \\"lockTime\\" : \\"23\\", \\"hash\\" : \\"abc12345678098\\", \\"recipientAddress\\" : \\"099765432\\", \\"refundAddress\\" : \\"7777888\\" }') # "rivinec atomicswap --testnet audit".format(acceptor_swap_address)
+    audit_swap_json = execute("rivinec atomicswap --testnet audit".format(acceptor_swap_address))
     audit_swap = json2obj(audit_swap_json)
 
 
@@ -72,13 +79,14 @@ def run(initiator_amount, acceptor_amount):
     redeem_cmd = "rivinec atomicswap redeem {} {} {} {} {} {} {}".format(acceptor_swap_address, acceptor_amount, audit_swap.refundAddress, initiator_wallet_address, btc_atomicswap.hash, audit_swap.lockTime, btc_atomicswap.secret)
     
   
-    #redeem =  execute(redeem_cmd)
+    redeem =  execute(redeem_cmd)
     #check if redeem success here
     response = stub.ProcessRedeemed(atomicswap_pb2.RedeemFinished(finished=True))
 
+dry_run = False
 
 if __name__ == '__main__':
-
+    
     parser = OptionParser()
 
     parser.add_option("-m", "--my-amount", dest="initiator_amount",
@@ -88,6 +96,12 @@ if __name__ == '__main__':
                     dest="acceptor_amount", default=True,
                     help="The amount of the other partners currency to swap")
     
-    (options, args) = parser.parse_args()
+    parser.add_option("-d", "--dry-run", action="store_true",
+                        dest="dry_run",  help="Do a dry run with dummy data")
 
+   
+    
+    (options, args) = parser.parse_args()
+    dry_run = options.dry_run
+  
     run(float(options.initiator_amount), float(options.acceptor_amount))
