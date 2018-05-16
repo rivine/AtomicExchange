@@ -1,10 +1,24 @@
 FROM ubuntu:16.04
 
-RUN apt-get update
-RUN apt-get install -y build-essential libtool autotools-dev autoconf libssl-dev libboost-all-dev software-properties-common python-software-properties git
+RUN apt-get -qq update
+RUN apt-get install -qq -y build-essential libtool autotools-dev autoconf libssl-dev libboost-all-dev software-properties-common python-software-properties git curl
 RUN add-apt-repository ppa:bitcoin/bitcoin
 RUN add-apt-repository ppa:longsleep/golang-backports
 
+## ZEROTIER
+RUN apt-get -y install supervisor && \
+    mkdir -p /var/log/supervisor
+
+RUN curl -s https://install.zerotier.com/ |  bash || true
+ # rm /var/lib/zerotier-one/zerotier-one.pid || true && \
+RUN service zerotier-one stop && \ 
+    echo "manual" >> /etc/init/zerotier-one.override
+   # rm /var/lib/zerotier-one/identity.secret && \
+   # rm /var/lib/zerotier-one/identity.public
+
+ADD supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+## /ZEROTIER
 RUN apt-get update
 
 RUN apt-get install -y  golang-go 
@@ -27,3 +41,4 @@ COPY rundaemons.sh rundaemons.sh
 CMD ./rundaemons.sh
 
 #
+
