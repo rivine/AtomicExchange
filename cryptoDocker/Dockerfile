@@ -36,9 +36,9 @@ RUN go get -u github.com/threefoldfoundation/tfchain/cmd/...
 
 COPY bitcoin.conf /root/.bitcoin/
 COPY btcatomicswap /bin/
-COPY rundaemons.sh rundaemons.sh
+COPY rundaemons.sh /rundaemons.sh
 #CMD ["bitcoind"]
-CMD ./rundaemons.sh
+CMD /rundaemons.sh
 
 #
 
