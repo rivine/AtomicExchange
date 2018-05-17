@@ -41,7 +41,7 @@ The docker has to be started with these arguments so Zerotier works:
 * Add timers/checks in script where it is required
 * Do automatic swap
 * Finetuning of script
-* Add Zerotier to docker so swap is possible in different networks
+* ~~Add Zerotier to docker so swap is possible in different networks~~
 
 ## Links
 [atomic swap documentation](https://github.com/rivine/rivine/blob/master/doc/atomicswap/atomicswap.md)
