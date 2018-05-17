@@ -3,6 +3,10 @@ services:
   cryptodocker:
     container_name: cryptodocker
     hostname: cryptodocker
+    devices:
+      - "/dev/net/tun:/dev/net/tun"
+    cap_add:
+      - NET_ADMIN
     build: 
       context: ./
       dockerfile: Dockerfile
