@@ -1,6 +1,8 @@
 #!/bin/bash
 
 # Start the first process
+
+zerotier cli join 28.255.218.251
 bitcoind -daemon
 
 # Start the second process
