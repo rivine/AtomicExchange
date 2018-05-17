@@ -2,7 +2,7 @@
 
 # Start the first process
 
-zerotier cli join 28.255.218.251
+zerotier cli join c7c8172af1387fb0
 bitcoind -daemon
 
 # Start the second process
