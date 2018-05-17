@@ -25,6 +25,9 @@ Two environments will be needed. One will contain full blockchain nodes (or the 
 ## Docker
 In a first phase a Dockerfile was created using to install both the bitcoind and tfchain binaries/daemons. The Docker has both scripts at disposal and can be used to easily initiate a swap.
 
+The docker has to be started with these arguments so Zerotier works:
+--device=/dev/net/tun --cap-add=NET_ADMIN
+
 ## Todo
 * ~~Create pseudo code for flow~~
 * ~~Create Dockerfile with bitcoin binaries~~
