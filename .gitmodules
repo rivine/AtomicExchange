@@ -1,0 +1,3 @@
+[submodule "AtomicExchange.Ui"]
+	path = AtomicExchange.Ui
+	url = git@github.com:JimberSoftware/AtomicExchange.Ui.git
