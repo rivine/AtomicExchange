@@ -1,7 +1,15 @@
-class AcceptorDryRun:
+import json 
 
-    initiator_amount = 1
-    acceptor_amount = 2
+
+class AcceptorDryRun:
+    initiator_amount = 0
+    acceptor_amount = 0
+
+    def __init__(self, initiator_amount, acceptor_amount):
+        self.initiator_amount = initiator_amount
+        self.acceptor_amount = acceptor_amount
+
+  
 
     acceptor_address = "accadr123456789"
     hash = ""
@@ -12,22 +20,54 @@ class AcceptorDryRun:
     def processCommand(self, command):
 
         if command.startswith("bitcoin-cli gentnewaddress"):
-            print("in new bitcoinaddress")
-            print( self.acceptor_address)
             return self.acceptor_address
 
         if command.startswith("btcatomicswap --testnet auditcontract"):
-            return '{\"lockTime\" : \"48\", \"contractValue\" : \"987\", \"recipientAddress\" : \"accadr123456789\"}'
-        
+
+            data = {}
+            data['lockTime'] = 48
+            data['contractValue'] = self.initiator_amount
+            data['recipientAddress'] = "accadr123456789" #todo gen
+            json_data = json.dumps(data)
+
+            return json_data
+         
+
         if command.startswith("rivinec atomicswap --testnet participate"):
-            return '{\"contractAddress\" : \"contr123456\"}'
+
+            data = {}
+            data["contractAddress"] = "contr123456"
+            json_data = json.dumps(data)
+
+            return json_data
+
         if command.startswith("rivinec --addr explorer.testnet.threefoldtoken.com extractsecret"):
-            return '{\"secret\" : \"mys3cr3t\"}'
+
+            data = {}
+            data["secret"] = "mys3cr3t"
+            json_data = json.dumps(data)
+
+            return json_data
 
         if command.startswith("btcatomicswap --testnet --rpcuser=user --rpcpass=pass redeem"):
-            return '{\"redeemFee\" : \"0.00002499\", \"redeemTx\" : \"9998\"}'
+
+            data = {}
+            data["redeemFee"] = "0.00002499"
+            data["redeemTx"] = "9998"
+            json_data = json.dumps(data)
+            
+            return json_data
+            
 
 class InitiatorDryRun:
+
+    initiator_amount = 0
+    acceptor_amount = 0
+
+    def __init__(self, initiator_amount, acceptor_amount):
+        self.initiator_amount = initiator_amount
+        self.acceptor_amount = acceptor_amount
+
 
     def processCommand(self, command):
 
@@ -36,8 +76,16 @@ class InitiatorDryRun:
         
         if command.startswith("rivinec wallet address"):
             return "099765432"
+
         if command.startswith("rivinec atomicswap --testnet audit"):
-            return '{\"contractValue\" : \"1234\", \"lockTime\" : \"23\", \"hash\" : \"abc12345678098\", \"recipientAddress\" : \"099765432\", \"refundAddress\" : \"7777888\" }'
+            data = {}
+            data["contractValue"] = self.acceptor_amount
+            data["lockTime"] = 23
+            data["hash"] = "abc12345678098"
+            data["recipientAddress"] = "099765432"
+            data["refundAddress"] = "7777888"
+            return json.dumps(data)
+            
 
         if command.startswith("rivinec atomicswap redeem"):
             return '{\"redeemFee\" : \"0.00002499\", \"redeemTx\" : \"9918\"}'

@@ -20,83 +20,99 @@ def json2obj(data): return json.loads(data, object_hook=_json_object_hook)
 
 _ONE_DAY_IN_SECONDS = 60 * 60 * 24
 
-def execute(process):
-    
-    global dry_run
 
-    if dry_run:
-        dry = AcceptorDryRun()
-        return dry.processCommand(process)
-
-    process = os.popen(process)
-    output = reprocessed = process.read()
-    process.close()
-    
-    return output.rstrip()
 
 class AtomicSwap(atomicswap_pb2_grpc.AtomicSwapServicer):
-
     
+    dry_run = False
+    initiator_amount = 0
+    acceptor_amount = 0
+    bitcoinaddress = "" #address generated to receive funds
+    contract_address = ""
+    initiator_contract = ""
+    initiator_transaction = ""
+
+    def __init__(self, initiator_amount, acceptor_amount, dry_run):
+        
+        self.initiator_amount = initiator_amount
+        self.acceptor_amount = acceptor_amount
+
+        self.dry_run = dry_run
+
+    def execute(self, process):
+
+        if self.dry_run:
+            dry = AcceptorDryRun(initiator_amount, acceptor_amount)
+            return dry.processCommand(process)
+
+        process = os.popen(process)
+        output = reprocessed = process.read()
+        process.close()
+        
+        return output.rstrip()
 
     def ProcessInitiate(self, request, context):
-        global bitcoinaddress
+     
         
         print("Acceptor: processInitiated for {} initiator_amount".format(request.initiator_amount))
-        bitcoinaddress = execute("bitcoin-cli gentnewaddress "" legacy") #
-        print("Acceptor: got new bitcoin address: {}".format(bitcoinaddress))
+        self.bitcoinaddress = self.execute("bitcoin-cli gentnewaddress "" legacy") #
+        print("Acceptor: got new bitcoin address: {}".format(self.bitcoinaddress))
     
-        return atomicswap_pb2.InitiateReply(acceptor_address=bitcoinaddress) #if(initiator_amount == request.initiator_amount and acceptor_amount == request.initiator_amount):
+        return atomicswap_pb2.InitiateReply(acceptor_address=self.bitcoinaddress) #if(initiator_amount == request.initiator_amount and acceptor_amount == request.initiator_amount):
 
         return False
     
     def ProcessInitiateSwap(self, request, context):
-        global contractAddress
-        global initiator_contract
-        global initiator_transaction
 
+    
         print("Acceptor: processInitiateSwap")
 
-        btc_audit_json =  execute("btcatomicswap --testnet auditcontract {} {}".format(request.contract, request.transaction)) 
+        btc_audit_json =  self.execute("btcatomicswap --testnet auditcontract {} {}".format(request.contract, request.transaction)) 
         print(btc_audit_json)
         btc_audit = json2obj(btc_audit_json)
-        initiator_contract = request.contract
-        initiator_transaction = request.transaction
+        self.initiator_contract = request.contract
+        self.initiator_transaction = request.transaction
 
         print("Acceptor: Auditing contract: ")
         print("{} > {}".format(btc_audit.lockTime, 40))
         print("{} = {}".format(btc_audit.contractValue, initiator_amount))
-        print("{} = {}".format(btc_audit.recipientAddress, bitcoinaddress))
+        print("{} = {}".format(btc_audit.recipientAddress, self.bitcoinaddress))
 
 
-        if(int(btc_audit.lockTime) < 40 or btc_audit.contractValue != initiator_amount or btc_audit.recipientAddress != bitcoinaddress):
-            print("Acceptor: Contract invalid")
+        if(int(btc_audit.lockTime) < 40):
+            print("Acceptor: contract invalid,locktime > 40 ; {}".format(int(btc_audit.lockTime)))
+            return False
+        if float(btc_audit.contractValue) != float(initiator_amount):
+            print("Acceptor: contract invalid,initiator_amount not equal ")
+            return False
+        if btc_audit.recipientAddress != self.bitcoinaddress:
+            print("Acceptor: Contract invalid, rec address <> bitcoinaddress")
             return False
 
-        rivinec_atomicswap_json = execute("rivinec atomicswap --testnet participate {} {} {}".format(request.initiator_wallet_address, acceptor_amount, request.hash))  #"
+        rivinec_atomicswap_json = self.execute("rivinec atomicswap --testnet participate {} {} {}".format(request.initiator_wallet_address, acceptor_amount, request.hash))  #"
        
         rivinec_atomicswap = json2obj(rivinec_atomicswap_json)
-        contractAddress = rivinec_atomicswap.contractAddress
+        self.contract_address = rivinec_atomicswap.contractAddress
         return atomicswap_pb2.AcceptSwap(acceptor_swap_address=rivinec_atomicswap.contractAddress)
 
 
-    def ProcessRedeemed(self,request,context):
-        global contractAddress
-        global initiator_transaction
+    def ProcessRedeemed(self,request,context): 
+  
         print("Acceptor: ProcessRedeemed")
 
-        get_secret_cmd = "rivinec --addr explorer.testnet.threefoldtoken.com extractsecret {}".format(contractAddress)
-        explore = json2obj(execute(get_secret_cmd))
+        get_secret_cmd = "rivinec --addr explorer.testnet.threefoldtoken.com extractsecret {}".format(self.contract_address)
+        explore = json2obj(self.execute(get_secret_cmd))
         
-        redeem_cmd = "btcatomicswap --testnet --rpcuser=user --rpcpass=pass redeem {} {} {}".format(initiator_contract, initiator_transaction, explore.secret)
-        redeem = json2obj(execute(redeem_cmd))
+        redeem_cmd = "btcatomicswap --testnet --rpcuser=user --rpcpass=pass redeem {} {} {}".format(self.initiator_contract, self.initiator_transaction, explore.secret)
+        redeem = json2obj(self.execute(redeem_cmd))
 
         
         return atomicswap_pb2.RedeemFinished(finished=True)
         
 
-def serve():
+def serve(initiator_amount, acceptor_amount, dry_run):
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    atomicswap_pb2_grpc.add_AtomicSwapServicer_to_server(AtomicSwap(), server)
+    atomicswap_pb2_grpc.add_AtomicSwapServicer_to_server(AtomicSwap(initiator_amount, acceptor_amount, dry_run), server)
     server.add_insecure_port('[::]:50051')
     server.start()
     try:
@@ -105,16 +121,9 @@ def serve():
     except KeyboardInterrupt:
         server.stop(0)
 
-initiator_amount = 0
-acceptor_amount = 0
-bitcoinaddress = ""
-contractAddress = ""
-initiator_contract = ""
-initiator_transaction = ""
-dry_run = False
+
 
 if __name__ == '__main__':
-    global dry_run
     parser = OptionParser()
 
     parser.add_option("-m", "--my-amount", dest="acceptor_amount",
@@ -134,4 +143,4 @@ if __name__ == '__main__':
 
     dry_run = options.dry_run
 
-    serve()
+    serve(initiator_amount, acceptor_amount, dry_run)

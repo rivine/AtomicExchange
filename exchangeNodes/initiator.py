@@ -17,73 +17,81 @@ from dry_run import InitiatorDryRun
 def _json_object_hook(d): return namedtuple('X', d.keys())(*d.values())
 def json2obj(data): return json.loads(data, object_hook=_json_object_hook)
 
+class AtomicSwap():
 
-def execute(process):
+
+    def __init__(self, initiator_amount, acceptor_amount, dry_run):
+        
+        self.initiator_amount = initiator_amount
+        self.acceptor_amount = acceptor_amount
+        self.dry_run = dry_run
+
+    def execute(self, process):
     
-    global dry_run
+ 
+        if self.dry_run:
+            dry = InitiatorDryRun(self.initiator_amount, self.acceptor_amount)
+            return dry.processCommand(process)
+        
 
-    if dry_run:
-        dry = InitiatorDryRun()
-        return dry.processCommand(process)
+        process = os.popen(process)
+        output = reprocessed = process.read()
+        process.close()
+        
+        return output.rstrip()
+
+    def run(self):
+
+        channel = grpc.insecure_channel('localhost:50051')
+        stub = atomicswap_pb2_grpc.AtomicSwapStub(channel)
+
+
+        response = stub.ProcessInitiate(atomicswap_pb2.Initiate(initiator_amount=self.initiator_amount, acceptor_amount=self.acceptor_amount))
+        #response.python -m pip install grpcio
+        print("Initiator: ")
+        print(response.acceptor_address)
+        btc_atomicswap_json = self.execute("btcatomicswap --testnet --rpcuser=user --rpcpass=pass initiate {} {}".format(response.acceptor_address, self.initiator_amount))
+        #do atomic swap
+
+
+        btc_atomicswap = json2obj(btc_atomicswap_json)
+        
+        
+        initiator_wallet_address =  self.execute("rivinec wallet address")
+        
+
+        response = stub.ProcessInitiateSwap(atomicswap_pb2.InitiateSwap(hash=btc_atomicswap.hash, contract=btc_atomicswap.contract, transaction=btc_atomicswap.contractTransaction, initiator_wallet_address=initiator_wallet_address))
+
+        acceptor_swap_address = response.acceptor_swap_address
+        print("Initiator acceptor_swap_address {}".format(acceptor_swap_address))
+
+
+        audit_swap_json = self.execute("rivinec atomicswap --testnet audit".format(acceptor_swap_address))
+        audit_swap = json2obj(audit_swap_json)
+
+
+        print("{} = {}".format(float(audit_swap.contractValue), self.acceptor_amount))
+        print(float(audit_swap.contractValue) == self.acceptor_amount)
+        print("{} > {}".format(audit_swap.lockTime, 20))
+        print(int(audit_swap.lockTime) > 20)
+        print("{} = {}".format(audit_swap.hash, btc_atomicswap.hash))
+        print(audit_swap.hash == btc_atomicswap.hash)
+        print("{} = {}".format(audit_swap.recipientAddress, initiator_wallet_address))
+        print(audit_swap.recipientAddress == initiator_wallet_address)
+
+        if(float(audit_swap.contractValue) != self.acceptor_amount or int(audit_swap.lockTime) < 20 or audit_swap.hash != btc_atomicswap.hash or audit_swap.recipientAddress != initiator_wallet_address):
+            print("Initiator: contract invalid")
+            exit(1) #redeem my money after 24h
+
+
+        redeem_cmd = "rivinec atomicswap redeem {} {} {} {} {} {} {}".format(acceptor_swap_address, self.acceptor_amount, audit_swap.refundAddress, initiator_wallet_address, btc_atomicswap.hash, audit_swap.lockTime, btc_atomicswap.secret)
+        
     
-
-    process = os.popen(process)
-    output = reprocessed = process.read()
-    process.close()
-    
-    return output.rstrip()
-
-def run(initiator_amount, acceptor_amount):
-    channel = grpc.insecure_channel('localhost:50051')
-    stub = atomicswap_pb2_grpc.AtomicSwapStub(channel)
+        redeem =  self.execute(redeem_cmd)
+        #check if redeem success here
+        response = stub.ProcessRedeemed(atomicswap_pb2.RedeemFinished(finished=True))
 
 
-    response = stub.ProcessInitiate(atomicswap_pb2.Initiate(initiator_amount=initiator_amount, acceptor_amount=acceptor_amount))
-    #response.python -m pip install grpcio
-    print("Initiator: ")
-    print(response.acceptor_address)
-    btc_atomicswap_json = execute("btcatomicswap --testnet --rpcuser=user --rpcpass=pass initiate {} {}".format(response.acceptor_address, initiator_amount))
-    #do atomic swap
-
-
-    btc_atomicswap = json2obj(btc_atomicswap_json)
-    
-    
-    initiator_wallet_address =  execute("rivinec wallet address")
-    
-
-    response = stub.ProcessInitiateSwap(atomicswap_pb2.InitiateSwap(hash=btc_atomicswap.hash, contract=btc_atomicswap.contract, transaction=btc_atomicswap.contractTransaction, initiator_wallet_address=initiator_wallet_address))
-
-    acceptor_swap_address = response.acceptor_swap_address
-    print("Initiator acceptor_swap_address {}".format(acceptor_swap_address))
-
-
-    audit_swap_json = execute("rivinec atomicswap --testnet audit".format(acceptor_swap_address))
-    audit_swap = json2obj(audit_swap_json)
-
-
-    print("{} = {}".format(float(audit_swap.contractValue), acceptor_amount))
-    print(float(audit_swap.contractValue) == acceptor_amount)
-    print("{} > {}".format(audit_swap.lockTime, 20))
-    print(int(audit_swap.lockTime) > 20)
-    print("{} = {}".format(audit_swap.hash, btc_atomicswap.hash))
-    print(audit_swap.hash == btc_atomicswap.hash)
-    print("{} = {}".format(audit_swap.recipientAddress, initiator_wallet_address))
-    print(audit_swap.recipientAddress == initiator_wallet_address)
-
-    if(float(audit_swap.contractValue) != acceptor_amount or int(audit_swap.lockTime) < 20 or audit_swap.hash != btc_atomicswap.hash or audit_swap.recipientAddress != initiator_wallet_address):
-        print("Initiator: contract invalid")
-        exit(1) #redeem my money after 24h
-
-
-    redeem_cmd = "rivinec atomicswap redeem {} {} {} {} {} {} {}".format(acceptor_swap_address, acceptor_amount, audit_swap.refundAddress, initiator_wallet_address, btc_atomicswap.hash, audit_swap.lockTime, btc_atomicswap.secret)
-    
-  
-    redeem =  execute(redeem_cmd)
-    #check if redeem success here
-    response = stub.ProcessRedeemed(atomicswap_pb2.RedeemFinished(finished=True))
-
-dry_run = False
 
 if __name__ == '__main__':
     
@@ -104,4 +112,5 @@ if __name__ == '__main__':
     (options, args) = parser.parse_args()
     dry_run = options.dry_run
   
-    run(float(options.initiator_amount), float(options.acceptor_amount))
+    atomic_swap = AtomicSwap(float(options.initiator_amount), float(options.acceptor_amount), dry_run)
+    atomic_swap.run()
