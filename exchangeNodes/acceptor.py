@@ -1,6 +1,7 @@
 
 from concurrent import futures
 import time
+import sys
 
 import grpc
 
@@ -33,7 +34,9 @@ def execute(process):
     process.close()
     
     return output.rstrip()
-
+def print_rt(output):
+    sys.stdout.write(output)
+    sys.stdout.flush()
 class AtomicSwap(atomicswap_pb2_grpc.AtomicSwapServicer):
 
     
@@ -41,9 +44,9 @@ class AtomicSwap(atomicswap_pb2_grpc.AtomicSwapServicer):
     def ProcessInitiate(self, request, context):
         global bitcoinaddress
         
-        print("Acceptor: processInitiated for {} initiator_amount".format(request.initiator_amount))
+        print_rt("Acceptor: processInitiated for {} initiator_amount".format(request.initiator_amount))
         bitcoinaddress = execute("bitcoin-cli gentnewaddress "" legacy") #
-        print("Acceptor: got new bitcoin address: {}".format(bitcoinaddress))
+        print_rt("Acceptor: got new bitcoin address: {}".format(bitcoinaddress))
     
         return atomicswap_pb2.InitiateReply(acceptor_address=bitcoinaddress) #if(initiator_amount == request.initiator_amount and acceptor_amount == request.initiator_amount):
 
@@ -54,22 +57,22 @@ class AtomicSwap(atomicswap_pb2_grpc.AtomicSwapServicer):
         global initiator_contract
         global initiator_transaction
 
-        print("Acceptor: processInitiateSwap")
+        print_rt("Acceptor: processInitiateSwap")
 
         btc_audit_json =  execute("btcatomicswap --testnet auditcontract {} {}".format(request.contract, request.transaction)) 
-        print(btc_audit_json)
+        print_rt(btc_audit_json)
         btc_audit = json2obj(btc_audit_json)
         initiator_contract = request.contract
         initiator_transaction = request.transaction
 
-        print("Acceptor: Auditing contract: ")
-        print("{} > {}".format(btc_audit.lockTime, 40))
-        print("{} = {}".format(btc_audit.contractValue, initiator_amount))
-        print("{} = {}".format(btc_audit.recipientAddress, bitcoinaddress))
+        print_rt("Acceptor: Auditing contract: ")
+        print_rt("{} > {}".format(btc_audit.lockTime, 40))
+        print_rt("{} = {}".format(btc_audit.contractValue, initiator_amount))
+        print_rt("{} = {}".format(btc_audit.recipientAddress, bitcoinaddress))
 
 
         if(int(btc_audit.lockTime) < 40 or btc_audit.contractValue != initiator_amount or btc_audit.recipientAddress != bitcoinaddress):
-            print("Acceptor: Contract invalid")
+            print_rt("Acceptor: Contract invalid")
             return False
 
         rivinec_atomicswap_json = execute("rivinec atomicswap --testnet participate {} {} {}".format(request.initiator_wallet_address, acceptor_amount, request.hash))  #"
@@ -82,7 +85,7 @@ class AtomicSwap(atomicswap_pb2_grpc.AtomicSwapServicer):
     def ProcessRedeemed(self,request,context):
         global contractAddress
         global initiator_transaction
-        print("Acceptor: ProcessRedeemed")
+        print_rt("Acceptor: ProcessRedeemed")
 
         get_secret_cmd = "rivinec --addr explorer.testnet.threefoldtoken.com extractsecret {}".format(contractAddress)
         explore = json2obj(execute(get_secret_cmd))
@@ -115,6 +118,8 @@ dry_run = False
 
 if __name__ == '__main__':
     global dry_run
+    print_rt("Start")
+
     parser = OptionParser()
 
     parser.add_option("-m", "--my-amount", dest="acceptor_amount",
@@ -133,5 +138,5 @@ if __name__ == '__main__':
     acceptor_amount = options.acceptor_amount
 
     dry_run = options.dry_run
-
+    
     serve()
