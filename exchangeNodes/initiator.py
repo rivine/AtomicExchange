@@ -8,6 +8,7 @@ import atomicswap_pb2
 import atomicswap_pb2_grpc
 from optparse import OptionParser
 
+import sys
 import os
 import json
 from collections import namedtuple
@@ -16,6 +17,12 @@ from dry_run import InitiatorDryRun
 
 def _json_object_hook(d): return namedtuple('X', d.keys())(*d.values())
 def json2obj(data): return json.loads(data, object_hook=_json_object_hook)
+
+def print_rt(output):
+    output = "{}\n".format(str(output))
+    sys.stdout.write(output)
+    sys.stdout.flush()
+
 
 class AtomicSwap():
 
@@ -48,8 +55,8 @@ class AtomicSwap():
 
         response = stub.ProcessInitiate(atomicswap_pb2.Initiate(initiator_amount=self.initiator_amount, acceptor_amount=self.acceptor_amount))
         #response.python -m pip install grpcio
-        print("Initiator: ")
-        print(response.acceptor_address)
+        print_rt("Initiator: ")
+        print_rt(response.acceptor_address)
         btc_atomicswap_json = self.execute("btcatomicswap --testnet --rpcuser=user --rpcpass=pass initiate {} {}".format(response.acceptor_address, self.initiator_amount))
         #do atomic swap
 
@@ -63,24 +70,24 @@ class AtomicSwap():
         response = stub.ProcessInitiateSwap(atomicswap_pb2.InitiateSwap(hash=btc_atomicswap.hash, contract=btc_atomicswap.contract, transaction=btc_atomicswap.contractTransaction, initiator_wallet_address=initiator_wallet_address))
 
         acceptor_swap_address = response.acceptor_swap_address
-        print("Initiator acceptor_swap_address {}".format(acceptor_swap_address))
+        print_rt("Initiator acceptor_swap_address {}".format(acceptor_swap_address))
 
 
         audit_swap_json = self.execute("rivinec atomicswap --testnet audit".format(acceptor_swap_address))
         audit_swap = json2obj(audit_swap_json)
 
 
-        print("{} = {}".format(float(audit_swap.contractValue), self.acceptor_amount))
-        print(float(audit_swap.contractValue) == self.acceptor_amount)
-        print("{} > {}".format(audit_swap.lockTime, 20))
-        print(int(audit_swap.lockTime) > 20)
-        print("{} = {}".format(audit_swap.hash, btc_atomicswap.hash))
-        print(audit_swap.hash == btc_atomicswap.hash)
-        print("{} = {}".format(audit_swap.recipientAddress, initiator_wallet_address))
-        print(audit_swap.recipientAddress == initiator_wallet_address)
+        print_rt("{} = {}".format(float(audit_swap.contractValue), self.acceptor_amount))
+        print_rt(float(audit_swap.contractValue) == self.acceptor_amount)
+        print_rt("{} > {}".format(audit_swap.lockTime, 20))
+        print_rt(int(audit_swap.lockTime) > 20)
+        print_rt("{} = {}".format(audit_swap.hash, btc_atomicswap.hash))
+        print_rt(audit_swap.hash == btc_atomicswap.hash)
+        print_rt("{} = {}".format(audit_swap.recipientAddress, initiator_wallet_address))
+        print_rt(audit_swap.recipientAddress == initiator_wallet_address)
 
         if(float(audit_swap.contractValue) != self.acceptor_amount or int(audit_swap.lockTime) < 20 or audit_swap.hash != btc_atomicswap.hash or audit_swap.recipientAddress != initiator_wallet_address):
-            print("Initiator: contract invalid")
+            print_rt("Initiator: contract invalid")
             exit(1) #redeem my money after 24h
 
 

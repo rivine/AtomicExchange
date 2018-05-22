@@ -1,4 +1,4 @@
-#install
+# install
 - install npm
 - install python
 
