@@ -87,7 +87,7 @@ python initiator.py -m 987 -o 1234 -d
 	}
 }
 { "step" : 9, "stepName" : "redeemAcceptorFinished"}
-
+```
 
 ## Initiator - Bob
 
