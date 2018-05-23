@@ -36,7 +36,7 @@ The docker has to be started with these arguments so Zerotier works:
 * ~~Prepare environments for first swap (get tokens)~~
 * ~~Adjust btcatomic swap binaries for json output~~
 * Adjust rivine/tfchain binaries for json output
-* Do manual swap
+* ~~Do manual swap~~
 * Adjust .md file to match output
 * Add timers/checks in script where it is required
 * Do automatic swap
