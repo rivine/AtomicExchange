@@ -26,9 +26,9 @@ values are currently hard coded, use these values.
 python initiator.py -m 987 -o 1234 -d
 ```
 
-#output
+# Output
 
-##Acceptor - Alice
+## Acceptor - Alice
 
 ```sh
 { "step" : 1, "stepName" : "initiateReceived , data: { "initiatorAmount" : "8", acceptorAmount: 10 }}
@@ -89,7 +89,7 @@ python initiator.py -m 987 -o 1234 -d
 { "step" : 9, "stepName" : "redeemAcceptorFinished"}
 
 
-##Initiator - Bob
+## Initiator - Bob
 
 ```sh
 {"step" : 1, "stepName" : "initiateExchange" , data: { "initiatorAmount" : "8", acceptorAmount: 10 }}
