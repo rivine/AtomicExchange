@@ -28,6 +28,66 @@ python initiator.py -m 987 -o 1234 -d
 
 # Output
 
+## Initiator - Bob
+
+```sh
+{"step" : 1, "stepName" : "initiateExchange" , data: { "initiatorAmount" : "8", acceptorAmount: 10 }}
+{ "step" : 2, "stepName": "reveiveAddress" : data: {"address": "ghjkllm"}
+{ "step" : 3, "stepName" : "createSmartContractInitiator,
+	data: {"hash": "ghjkllm"
+		"contractValue: "20"
+		"contract: "1234"
+		"contractTransaction: "1234"
+		"hash": "6qsdfaq65f4a"
+		"recipientAddress": "mazief58amzf41"
+
+	}
+{ "step" : 4, "stepName" : "generateInitiatorWalletAddress" , data: { "address": "sefzqfzara5142q63z5f4"}}
+{ "step" : 5, "stepName" : "sendSmartContractInitiator" ,
+	data: {"hash": "ghjkllm"
+		"contractValue: "20"
+		"contract: "1234"
+		"contractTransaction: "1234"
+		"hash": "6qsdfaq65f4a"
+		"recipientAddress": "mazief58amzf41"
+		"generateInitiatorWalletAddress: "fmaf4f5qsfa654"
+	}
+}
+{ "step" : 6, "stepName" : "auditSmartContractAcceptor" ,
+	data: { 
+		contractValue: {
+			expected:  "acceptorAmount"
+			actual: contractValue
+		}
+		lockTime: {
+			expected:  ">40"
+			actual: 20
+		}	
+		hash: {
+			expected:  atomicSwapHash
+			actual: auditSwapHash
+		}
+		address: {
+			expected:  initiatorWalletAddress
+			actual: receipientAddress
+		}
+		contractValid: false;
+	}
+}
+{ "step" : 7, "stepName" : "redeemFundsInitiator" ,	
+	data: {
+		"acceptorSwapAddress": "ghjkllm"
+		"acceptorAmount: "20"
+		"refundAddress: "6qsdfaq65f4a"
+		"initiatorWalletAddress: "6qsdfaq65f4a"
+		"hash": "6qsdfaq65f4a"
+		"lockTime": "mazief58amzf41"
+		"secret: "fmaf4f5qsfa654"
+	}
+}
+{ "step" : 8, "stepName" : "redeemInitiatorFinished"}
+```
+
 ## Acceptor - Alice
 
 ```sh
@@ -87,64 +147,4 @@ python initiator.py -m 987 -o 1234 -d
 	}
 }
 { "step" : 9, "stepName" : "redeemAcceptorFinished"}
-```
-
-## Initiator - Bob
-
-```sh
-{"step" : 1, "stepName" : "initiateExchange" , data: { "initiatorAmount" : "8", acceptorAmount: 10 }}
-{ "step" : 2, "stepName": "reveiveAddress" : data: {"address": "ghjkllm"}
-{ "step" : 3, "stepName" : "createSmartContractInitiator,
-	data: {"hash": "ghjkllm"
-		"contractValue: "20"
-		"contract: "1234"
-		"contractTransaction: "1234"
-		"hash": "6qsdfaq65f4a"
-		"recipientAddress": "mazief58amzf41"
-
-	}
-{ "step" : 4, "stepName" : "generateInitiatorWalletAddress" , data: { "address": "sefzqfzara5142q63z5f4"}}
-{ "step" : 5, "stepName" : "sendSmartContractInitiator" ,
-	data: {"hash": "ghjkllm"
-		"contractValue: "20"
-		"contract: "1234"
-		"contractTransaction: "1234"
-		"hash": "6qsdfaq65f4a"
-		"recipientAddress": "mazief58amzf41"
-		"generateInitiatorWalletAddress: "fmaf4f5qsfa654"
-	}
-}
-{ "step" : 6, "stepName" : "auditSmartContractAcceptor" ,
-	data: { 
-		contractValue: {
-			expected:  "acceptorAmount"
-			actual: contractValue
-		}
-		lockTime: {
-			expected:  ">40"
-			actual: 20
-		}	
-		hash: {
-			expected:  atomicSwapHash
-			actual: auditSwapHash
-		}
-		address: {
-			expected:  initiatorWalletAddress
-			actual: receipientAddress
-		}
-		contractValid: false;
-	}
-}
-{ "step" : 7, "stepName" : "redeemFundsInitiator" ,	
-	data: {
-		"acceptorSwapAddress": "ghjkllm"
-		"acceptorAmount: "20"
-		"refundAddress: "6qsdfaq65f4a"
-		"initiatorWalletAddress: "6qsdfaq65f4a"
-		"hash": "6qsdfaq65f4a"
-		"lockTime": "mazief58amzf41"
-		"secret: "fmaf4f5qsfa654"
-	}
-}
-{ "step" : 8, "stepName" : "redeemInitiatorFinished"}
 ```
