@@ -32,6 +32,7 @@ def print_json(step, stepName, data):
     jsonObject['stepName'] = stepName
     jsonObject['data'] = data
     json_data = json.dumps(jsonObject)   
+    json_data = "{}\n".format(str(json_data))  
     sys.stdout.write(json_data)
     sys.stdout.flush()
 

@@ -28,12 +28,12 @@ def print_json(step, stepName, data):
     jsonObject['step'] = step
     jsonObject['stepName'] = stepName
     jsonObject['data'] = data
-    json_data = json.dumps(jsonObject)   
+    json_data = json.dumps(jsonObject) 
+    json_data = "{}\n".format(str(json_data))  
     sys.stdout.write(json_data)
     sys.stdout.flush()
 
 class AtomicSwap():
-
 
     def __init__(self, initiator_amount, acceptor_amount, dry_run):
         
@@ -47,7 +47,6 @@ class AtomicSwap():
             dry = InitiatorDryRun(self.initiator_amount, self.acceptor_amount)
             return dry.processCommand(process)
         
-
         process = os.popen(process)
         output = reprocessed = process.read()
         process.close()
