@@ -29,16 +29,18 @@ RUN mkdir /root/.bitcoin/
 RUN mkdir -p /usr/local/go
 
 #Qt
-RUN wget http://download.qt.io/official_releases/qt/5.11/5.11.0/qt-opensource-linux-x64-5.11.0.run
-RUN chmod +x qt-opensource-linux-x64-5.7.0.run ./qt-opensource-linux-x64-5.7.0.run
-RUN apt-get install libfontconfig1
-RUN apt-get install libglu1-mesa-dev -y
+#RUN wget http://download.qt.io/official_releases/qt/5.11/5.11.0/qt-opensource-linux-x64-5.11.0.run
+#RUN chmod +x qt-opensource-linux-x64-5.7.0.run ./qt-opensource-linux-x64-5.7.0.run
+#RUN apt-get install libfontconfig1
+#RUN apt-get install libglu1-mesa-dev -y
 
 #ENV GOROOT=/usr/local/go
 #ENV GOPATH=/root/go
 ENV PATH=$PATH:/root/go/bin/
 
 RUN go get -u github.com/threefoldfoundation/tfchain/cmd/...
+
+COPY dist /dist
 
 COPY bitcoin.conf /root/.bitcoin/
 COPY btcatomicswap /bin/

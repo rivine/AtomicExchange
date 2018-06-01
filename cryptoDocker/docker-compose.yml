@@ -1,22 +1,39 @@
 version: "3"
 services:
-  cryptodocker:
-    container_name: cryptodocker
-    hostname: cryptodocker
+  exchangepartya:
+    container_name: exchangepartya
+    hostname: exchangepartya
     devices:
       - "/dev/net/tun:/dev/net/tun"
     cap_add:
       - NET_ADMIN
     build: 
       context: ./
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile  
     image: cryptodocker
     ports: 
-      - "8000:8000"
+      - "801:8080"
     networks:
       jimber:
         aliases:
           - jimber
+  exchangepartyb:
+    container_name: exchangepartyb
+    hostname: exchangepartyb
+    devices:
+      - "/dev/net/tun:/dev/net/tun"
+    cap_add:
+      - NET_ADMIN
+    build: 
+      context: ./
+      dockerfile: Dockerfile  
+    image: cryptodocker
+    ports: 
+      - "802:8080"
+    networks:
+      jimber:
+        aliases:
+          - jimber 
 networks:
   jimber:
     external:

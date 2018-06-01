@@ -1,2 +1,4 @@
 all:
-	rm -r dist && mkdir dist && cd AtomicExchange.Ui && qmake && make && cd .. && cp AtomicExchange.Ui/atomicExchange ./dist && chmod +x dist/atomicExchange && cp -R exchangeNodes dist
+	rm -r dist || true && mkdir dist && cd AtomicExchange.Ui && qmake && make && cd .. && cp AtomicExchange.Ui/atomicExchange ./dist && chmod +x dist/atomicExchange && cp -R exchangeNodes dist
+docker:
+	cp -R dist cryptoDocker/ && cd cryptoDocker && docker-compose build && docker-compose up

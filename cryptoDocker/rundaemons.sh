@@ -11,5 +11,7 @@ tfchaind --network testnet -M cgtewb &
 /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf &
 sleep 5
 zerotier-cli join c7c8172af1387fb0
+#@todo check
+/dist/atomicExchange -platform webgl &
 
 tail -f /dev/null
