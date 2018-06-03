@@ -1,7 +1,8 @@
 FROM ubuntu:16.04
 
+RUN echo test > /test
 RUN apt-get -qq update
-RUN apt-get install -qq -y build-essential libtool autotools-dev autoconf libssl-dev libboost-all-dev software-properties-common python-software-properties git curl
+RUN apt-get install -qq -y build-essential libtool autotools-dev autoconf libssl-dev libboost-all-dev software-properties-common python-software-properties git curl wget jq
 RUN add-apt-repository ppa:bitcoin/bitcoin
 RUN add-apt-repository ppa:longsleep/golang-backports
 
@@ -29,10 +30,19 @@ RUN mkdir /root/.bitcoin/
 RUN mkdir -p /usr/local/go
 
 #Qt
-#RUN wget http://download.qt.io/official_releases/qt/5.11/5.11.0/qt-opensource-linux-x64-5.11.0.run
-#RUN chmod +x qt-opensource-linux-x64-5.7.0.run ./qt-opensource-linux-x64-5.7.0.run
-#RUN apt-get install libfontconfig1
-#RUN apt-get install libglu1-mesa-dev -y
+
+RUN wget -P /tmp/ http://download.qt.io/official_releases/qt/5.10/5.10.0/qt-opensource-linux-x64-5.10.0.run
+RUN chmod +x /tmp/qt-opensource-linux-x64-5.10.0.run
+RUN apt-get install -y libgl1-mesa-dev  libxext-dev libglib2.0-0 libfontconfig1 libdbus-1-3 libnss3 libxcomposite1 libxcursor1 libxi6 libxtst6 libxrandr2 libasound2 libegl1-mesa 
+COPY extract-qt-installer /tmp/extract-qt-installer
+RUN chmod +x /tmp/extract-qt-installer
+ENV QT_CI_PACKAGES="qt.qt5.5100.gcc_64,qt.qt5.5110.qtwebglplugin,qt.qt5.5100.qtwebengine"
+RUN  /tmp/extract-qt-installer /tmp/qt-opensource-linux-x64-5.10.0.run /qt
+ENV QTDIR=/qt/5.10.0/gcc_64
+ENV PATH="$QTDIR/bin:$PATH"
+ENV LD_LIBRARY_PATH="$QTDIR/lib:$LD_LIBRARY_PATH"
+ENV QT_DEBUG_PLUGINS=1
+COPY libqwebgl.so /qt/5.10.0/gcc_64/plugins/platforms/
 
 #ENV GOROOT=/usr/local/go
 #ENV GOPATH=/root/go
