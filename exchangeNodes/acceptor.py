@@ -8,6 +8,8 @@ import grpc
 import atomicswap_pb2
 import atomicswap_pb2_grpc
 
+import urllib2
+
 import os
 from optparse import OptionParser
 import json
@@ -41,8 +43,8 @@ class AtomicSwap(atomicswap_pb2_grpc.AtomicSwapServicer):
     dry_run = False
     initiator_amount = 0
     acceptor_amount = 0
-    bitcoinaddress = "" #address generated to receive funds
-    contract_address = ""
+    participant_address = ""
+    participant_redeem_address = ""
     initiator_contract = ""
     initiator_transaction = ""
 
@@ -52,6 +54,40 @@ class AtomicSwap(atomicswap_pb2_grpc.AtomicSwapServicer):
         self.acceptor_amount = acceptor_amount
 
         self.dry_run = dry_run
+
+    def waitForConfirmsBTC(self, hash):
+        while True:
+            try:
+                btc_tx_json = urllib2.urlopen("https://test-insight.bitpay.com/api/addr/"+ request.transaction).read()
+                btc_tx = json2obj(btc_tx_json)
+                break
+            except Exception as e:
+                print(e, 'Trying again in 10 seconds...')
+                time.sleep(10)
+
+        while btc_tx.confirmations < 6:
+            time.sleep(10)
+            btc_tx_json = urllib2.urlopen("https://test-insight.bitpay.com/api/addr/"+ request.transaction).read()
+            btc_tx = json2obj(btc_tx_json)
+
+        ################### From TF counterpart function
+        # Get Info from Explorer related to Address
+        txInfo_json = self.execute("tfchainc explore hash "+ hash)
+        txInfo = json2obj(txInfo_json)
+
+        # Keep Checking Explorer until we find the Transaction in a Block
+        while txInfo.transactions.height is None:
+            time.sleep(10)
+            txInfo_json = self.execute("tfchainc explore hash "+ hash)
+            txInfo = json2obj(txInfo_json)
+
+        # Then get current Block Height
+        currentBlockHeight = self.execute("tfchainc consensus | grep Height | cut -d' ' -f2")
+        
+        # Keep Comparing Heights until we have enough difference (confirmations)
+        while currentBlockHeight - txInfo.transactions.height < 6:
+            time.sleep(10)
+            currentBlockHeight = self.execute("tfchainc consensus | grep Height | cut -d' ' -f2")
 
     def execute(self, process):
 
@@ -72,19 +108,22 @@ class AtomicSwap(atomicswap_pb2_grpc.AtomicSwapServicer):
         data['initiatorAmount'] = request.initiator_amount
         print_json(1, "initiateReceived", data)
 
-        self.bitcoinaddress = self.execute("bitcoin-cli gentnewaddress "" legacy") #
+        self.participant_address = self.execute("bitcoin-cli getnewaddress "" legacy") #
         data = {}
-        data['address'] = self.bitcoinaddress
+        data['address'] = self.participant_address
         print_json(2, "generateAddress", data)      
     
         print_json(3, "sendAddress", data)      
-        return atomicswap_pb2.InitiateReply(acceptor_address=self.bitcoinaddress) #if(initiator_amount == request.initiator_amount and acceptor_amount == request.initiator_amount):
+        return atomicswap_pb2.InitiateReply(acceptor_address=self.participant_address) #if(initiator_amount == request.initiator_amount and acceptor_amount == request.initiator_amount):
 
 
         return False
     
     def ProcessInitiateSwap(self, request, context):
 
+       
+
+        # Before this next line we should check if we can hash the hexstrings and get the same hash visible on block explorer
         btc_audit_json =  self.execute("btcatomicswap --testnet auditcontract {} {}".format(request.contract, request.transaction)) 
         btc_audit = json2obj(btc_audit_json)
         self.initiator_contract = request.contract
@@ -110,7 +149,7 @@ class AtomicSwap(atomicswap_pb2_grpc.AtomicSwapServicer):
         lockTime['actual'] = btc_audit.lockTime
         data['lockTime'] = lockTime
 
-        recipientAddress['expected'] = self.bitcoinaddress
+        recipientAddress['expected'] = self.participant_address
         recipientAddress['actual'] = btc_audit.recipientAddress
         data['address'] = recipientAddress
 
@@ -120,15 +159,15 @@ class AtomicSwap(atomicswap_pb2_grpc.AtomicSwapServicer):
         if float(btc_audit.contractValue) != float(initiator_amount):
             data['contractValid'] = 'false'
             return False
-        if btc_audit.recipientAddress != self.bitcoinaddress:
+        if btc_audit.recipientAddress != self.participant_address:
             data['contractValid'] = 'false'
             return False
         else:
             data['contractValid'] = 'true'
 
-        print_json(5, "auditSmartContractInitiator", data)    
+        print_json(5, "auditSmartContractInitiator", data)
 
-        rivinec_atomicswap_json = self.execute("rivinec atomicswap --testnet participate {} {} {}".format(request.initiator_wallet_address, acceptor_amount, request.hash))  #"
+        tf_atomicswap_json = self.execute("tfchainc atomicswap participate {} {} {}".format(request.initiator_wallet_address, acceptor_amount, request.hash))
        
         data = {}
         data['hash'] = request.hash
@@ -137,33 +176,33 @@ class AtomicSwap(atomicswap_pb2_grpc.AtomicSwapServicer):
         
         print_json(6, "createSmartContractAcceptor", data)
 
-        rivinec_atomicswap = json2obj(rivinec_atomicswap_json)
-        self.contract_address = rivinec_atomicswap.contractAddress
+        tf_atomicswap = json2obj(tf_atomicswap_json)
+        self.participator_redeem_address = tf_atomicswap.contractAddress
 
 
 
-        print_json(7, "sendSmartContractAcceptor", data)  
+        print_json(7, "sendSmartContractAcceptor", data)
 
-        return atomicswap_pb2.AcceptSwap(acceptor_swap_address=rivinec_atomicswap.contractAddress)
+        return atomicswap_pb2.AcceptSwap(acceptor_swap_address=tf_atomicswap.contractAddress)
 
 
-    def ProcessRedeemed(self,request,context): 
-
-        get_secret_cmd = "rivinec --addr explorer.testnet.threefoldtoken.com extractsecret {}".format(self.contract_address)
+    def ProcessRedeemed(self,request,context):
+        
+        get_secret_cmd = "tfchainc --addr explorer.testnet.threefoldtoken.com extractsecret {}".format(request.txID)
         explore = json2obj(self.execute(get_secret_cmd))
 
         data = {}
         data['initiatorContract'] = self.initiator_contract
         data['initiatorTransaction'] = self.initiator_transaction
         data['secret'] = explore.secret
-        print_json(8, "redeemFundsAcceptor", data)   
+        print_json(8, "redeemFundsAcceptor", data)
         
-        redeem_cmd = "btcatomicswap --testnet --rpcuser=user --rpcpass=pass redeem {} {} {}".format(self.initiator_contract, self.initiator_transaction, explore.secret)
+        redeem_cmd = "btcatomicswap --testnet --rpcuser=user --rpcpass=pass redeem {} {} {}".format(self.initiator_contract, self.initiator_transaction, request.secret)
         redeem = json2obj(self.execute(redeem_cmd))
 
         data = {}
         data['finished'] = 'true'
-        print_json(9, "redeemFundsAcceptorFinished", data)   
+        print_json(9, "redeemFundsAcceptorFinished", data)
 
         return atomicswap_pb2.RedeemFinished(finished=True)
         
