@@ -36,16 +36,16 @@ def print_json(step, stepName, data):
 
 class AtomicSwap():
 
-    def __init__(self, initiator_amount, participant_amount, dry_run):
+    def __init__(self, init_amount, part_amount, dry_run):
         
-        self.initiator_amount = initiator_amount
-        self.participant_amount = participant_amount
+        self.init_amount = init_amount
+        self.part_amount = part_amount
         self.dry_run = dry_run
 
     def execute(self, process):
  
         if self.dry_run:
-            dry = InitiatorDryRun(self.initiator_amount, self.participant_amount)
+            dry = InitiatorDryRun(self.init_amount, self.part_amount)
             return dry.processCommand(process)
         
         process = os.popen(process)
@@ -56,86 +56,89 @@ class AtomicSwap():
         
     def run(self):
 
+        #######GLOSSARY######
+        # init = initiator
+        # part = participant
+        # ctc = contract
+        # tx = transaction
+        # addr = address
+        # o = output
+        # r = response
+        #####################
+
+        # Step 1 - Initiating Exchange
+
+            # Opening Connection
         channel = grpc.insecure_channel('localhost:50051')
         stub = atomicswap_pb2_grpc.AtomicSwapStub(channel)
 
-        # Sends call to Participant, confirming amounts and saves response data
-        print_json(1, "initiateExchange", self.step_one_json())
-        response = stub.ProcessInitiate(atomicswap_pb2.Initiate(initiator_amount=self.initiator_amount, participant_amount=self.participant_amount))
-        print_json(2, "receiveAddress", self.step_two_json(response))
+            # RPC #1 to Participant,
+            # IF Participant agrees with amounts,
+            # Returns Participant Address 
+        response = stub.ProcessInitiate(atomicswap_pb2.Initiate(init_amount=self.init_amount, part_amount=self.part_amount))
 
-        # Uses Participant address from response to create BTC contract
-        btc_atomicswap_json = self.execute("btcatomicswap --testnet --rpcuser=user --rpcpass=pass initiate {} {}".format(response.participant_address, self.initiator_amount))
-        btc_atomicswap = json2obj(btc_atomicswap_json)   
-        print_json(3, "generateSmartContractInitiator", self.step_three_json(btc_atomicswap))  
+            # Generate Initiator Address on Participant chain
+        self.init_addr = self.execute("tfchainc wallet address")[21:] # removing substring, JSON output in future?
 
-        # Creates Initiator Address for Participant to create contract with
-        initiator_address = self.execute("tfchainc wallet address")
-        print_json(4, "generateInitiatorWalletAddress", self.step_four_json(initiator_address))
+            # Print Step Info
+        print_json(1, "Get Confirmation From Participant", self.step_one_data(response))
 
-        # Sends call to other Party, with the scripthash, the contract and transaction hexstrings, and the Initiator TFT address and saves response data
-        response = stub.ProcessInitiateSwap(atomicswap_pb2.InitiateSwap(hash=btc_atomicswap.hash, contract=btc_atomicswap.contract, transaction=btc_atomicswap.contractTransaction, initiator_address=initiator_address))
-        print_json(5, "sendSmartContractInitiator", self.step_five_json(btc_atomicswap, initiator_address))
 
-        participant_redeem_address = response.participant_redeem_address
-        #print_rt("Initiator participant_redeem_address {}".format(participant_redeem_address))
+        # Step 2 - Initiator Atomicswap Contract with Participant address
+            
+            # Create Atomicswap contract on Initiator chain using Participant address
+        init_ctc_json = self.execute("btcatomicswap --testnet --rpcuser=user --rpcpass=pass -s localhost:8332 initiate {} {}".format(response.part_addr, self.init_amount))
 
-        # Wait for Enough Confirmations before Auditing Participant Contract
-        self.waitForConfirmsTF(participant_redeem_address)
+            # Convert JSON output to Python Object
+        init_ctc = json2obj(init_ctc_json)       
 
-        # Audit Participant Contract
-        audit_swap_json = self.execute("tfchainc atomicswap audit {}".format(participant_redeem_address))
-        audit_swap = json2obj(audit_swap_json)
+            # RPC #2 to Participant, 
+            # IF Participant agrees with the Initiator Contract,
+            # Returns Participant Contract Redeem Address
+        response = stub.ProcessInitiateSwap(atomicswap_pb2.InitiateSwap(init_ctc_redeem_addr=init_ctc.hash, contract=init_ctc.contract, transaction=init_ctc.contractTransaction, init_addr=self.init_addr))
+            
+            # Print Step Info
+        print_json(2, "Create Initiator Contract", self.step_two_data(init_ctc))
 
-        data = {}
-        contractValue = {}
-        address = {}
-        lockTime = {}
-        hash = {}
-        contractValue['expected'] = self.participant_amount
-        contractValue['actual'] = audit_swap.contractValue
-        data['contractValue'] = contractValue
+            # Waiting for TF Participant contract to be visible
+        time.sleep(180)
 
-        lockTime['expected'] = ">20"
-        lockTime['actual'] = audit_swap.lockTime
-        data['lockTime'] = lockTime
 
-        hash['expected'] = btc_atomicswap.hash
-        hash['actual'] = audit_swap.hash
-        data['hash'] = hash
+        # Step 3 - Initiator Audits Participant Contract & Fulfills it with Redeem Transaction, Reveals Secret
 
-        address['expected'] = initiator_address
-        address['actual'] = audit_swap.recipientAddress
-        data['address'] = address
+        ####################SKIPPING AUDIT STEP FOR POC###################
 
-        # Checking if expected values and actual ones match
-        if(float(audit_swap.contractValue) != self.participant_amount or int(audit_swap.lockTime) < 20 or audit_swap.hash != btc_atomicswap.hash or audit_swap.recipientAddress != initiator_address):
-            data['contractValid'] = 'false'
-            exit(1) #redeem my money after 24h
-        else: 
-            data['contractValid'] = 'true'
+            # Wait for Enough Confirmations before Auditing Participant Contract
+        # self.waitForConfirmsTF(response.part_ctc_redeem_addr)
 
-        print_json(6, "auditSmartContractparticipant", data)    
+            # Audit Participant Contract
+        # tft_atomicswap_json = self.execute("tfchainc atomicswap --encoding json auditcontract {} --amount {} --min-duration {} --receiver {} --secrethash {}".format(response.part_redeem_addr, self.part_amount, "20h", self.init_addr, init_ctc.hash ))
+        # tft_atomicswap = json2obj(tft_atomicswap_json)
 
-        redeem_cmd = "tfchainc atomicswap redeem {} {}".format(participant_redeem_address, btc_atomicswap.secret)
+        # print_json(3, "Audit Participant Contract", self.step_three_json(init_ctc, tft_atomicswap))
         
-        data = {}
-        data['participantSwapAddress'] = participant_redeem_address
-        data['secret'] = btc_atomicswap.secret
-        print_json(7, "redeemFundsInitiator", data)   
+        # Uncomment when we have JSON output properly working
+        #if(tft_atomicswap.verifications.matchAll == False):
+        #    exit(1) #redeem my money after 24h
 
-        redeem_json = self.execute(redeem_cmd)
-        redeem = json2obj(redeem_json)
+        ####################SKIPPING AUDIT STEP FOR POC###################
 
-    
-        #check if redeem success here
-        self.waitForConfirmsTF(redeem.transaction_address)
+            # Make Redeem Transaction
+        init_redeem_tx_json = self.execute("tfchainc atomicswap redeem {} {}".format(response.part_redeem_addr, init_ctc.secret))
+        init_redeem_tx = json2obj(init_redeem_tx_json)
 
-        response = stub.ProcessRedeemed(atomicswap_pb2.RedeemFinished(finished=True, txID=redeem.transaction_address))
+        # check if redeem success here
+        # self.waitForConfirmsTF(init_redeem_tx.tx_addr)
+        # FUNCTION NEEDS TESTING FIRST, relies on JSON output
+            
+            # RPC #3 to Participant, 
+            # IF Participant makes Redeem Transaction,
+            # Returns a Finished = True message
+        response = stub.ProcessRedeemed(atomicswap_pb2.RedeemFinished(finished=True, tx_addr=init_redeem_tx.tx_addr))
+
+            # Print Step Info
+        print_json(4, "Initiator makes Redeem Transaction, Reveals Secret", self.step_four_data(response, init_ctc))   
         
-        data = {}
-        data['finished'] = 'true'
-        print_json(8, "redeemFundsInitiatorFinished", data)
 
     def waitForConfirmsTF(self, hash):
         # Get Info from Explorer related to Address
@@ -151,56 +154,65 @@ class AtomicSwap():
 
         # Then get current Block Height
         currentBlockHeight = self.execute("tfchainc consensus | grep Height | cut -d' ' -f2")
-        
+
         # Keep Comparing Heights until we have enough difference (confirmations)
         while currentBlockHeight - txInfo.transactions.height < 6:
             time.sleep(10)
             currentBlockHeight = self.execute("tfchainc consensus | grep Height | cut -d' ' -f2")
 
-    def step_one_json(self):
+    def step_one_data(self, r):
         data = {}
-        data['participantAmount'] = self.participant_amount
-        data['initiatorAmount'] = self.initiator_amount
+        data['participantAmount'] = self.part_amount
+        data['initiatorAmount'] = self.init_amount
+        data['participantAddress'] = r.part_addr
+        data['initiatorAddress'] = self.init_addr
         return data
 
-    def step_two_json(self, obj):
+    def step_two_data(self, ic):
         data = {}
-        data['address'] = obj.participant_address
+        data['hash'] = ic.hash
+        data['contract'] = ic.contract
+        data['contractTransaction'] = ic.contractTransaction
+        data['initiatorAddress'] = self.init_addr
         return data
 
-    def step_three_json(self, obj):
+    def step_three_data(self, ic, pc):
         data = {}
-        data['hash'] = obj.hash
-        data['contract'] = obj.contract
-        data['contractTransaction'] = obj.contractTransaction
+
+        contractValue = {}
+        contractValue['expected'] = self.part_amount
+        contractValue['actual'] = pc.contractValue
+        contractValue['match'] = pc.contractValueMatch
+        data['contractValue'] = contractValue
+
+        recipientAddress = {}
+        recipientAddress['expected'] = self.init_addr
+        recipientAddress['actual'] = pc.recipientAddress
+        recipientAddress['match'] = pc.recipientAddressMatch
+        data['address'] = recipientAddress
+
+        lockTime = {}
+        lockTime['expected'] = ">20"
+        lockTime['actual'] = pc.lockTime
+        data['lockTime'] = lockTime
+        
+        secretHash = {}
+        secretHash['expected'] = ic.hash
+        secretHash['actual'] = pc.hash
+        secretHash['match'] = pc.hashedSecretMatch
+        data['hash'] = secretHash        
+
         return data
 
-    def step_four_json(self, addr):
+    def step_four_data(self, r, ic):
         data = {}
-        data['address'] = addr
+        data['participantRedeemAddress'] = r.part_redeem_addr
+        data['secret'] = ic.secret
         return data
 
-    def step_five_json(self, obj, addr):
+    def step_five_data(self):
         data = {}
-        data['hash'] = obj.hash
-        data['contract'] = obj.contract
-        data['contractTransaction'] = obj.contractTransaction
-        data['initiatorWalletAddress'] = addr
-        return data
-
-    def step_six_json(self, obj):
-        data = {}
-
-        return data
-
-    def step_seven_json(self, obj):
-        data = {}
-
-        return data
-
-    def step_eight_json(self, obj):
-        data = {}
-
+        data['finished'] = 'true'
         return data
 
 
@@ -209,11 +221,11 @@ if __name__ == '__main__':
     
     parser = OptionParser()
 
-    parser.add_option("-m", "--my-amount", dest="initiator_amount",
+    parser.add_option("-m", "--my-amount", dest="init_amount",
                     help="Your amount of your currency to swap", metavar="INITIATORAMOUNT")
 
     parser.add_option("-o", "--other-amount",
-                    dest="participant_amount", default=True,
+                    dest="part_amount", default=True,
                     help="The amount of the other partners currency to swap")
     
     parser.add_option("-d", "--dry-run", action="store_true",
@@ -224,5 +236,5 @@ if __name__ == '__main__':
     (options, args) = parser.parse_args()
     dry_run = options.dry_run
   
-    atomic_swap = AtomicSwap(float(options.initiator_amount), float(options.participant_amount), dry_run)
+    atomic_swap = AtomicSwap(float(options.init_amount), float(options.part_amount), dry_run)
     atomic_swap.run()

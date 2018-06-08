@@ -55,7 +55,7 @@ class AtomicSwap(atomicswap_pb2_grpc.AtomicSwapServicer):
 
         self.dry_run = dry_run
 
-    def waitForConfirmsBTC(self, hash):
+    def waitForConfirmsBTC(self, request, tx_addr):
         while True:
             try:
                 btc_tx_json = urllib2.urlopen("https://test-insight.bitpay.com/api/addr/"+ request.transaction).read()
