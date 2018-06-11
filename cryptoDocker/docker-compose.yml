@@ -10,9 +10,12 @@ services:
     build: 
       context: ./
       dockerfile: Dockerfile  
+    environment:
+      - QT_WEBGL_WEBSOCKETSERVER=ws://0.0.0.0:33000
     image: cryptodocker
     ports: 
       - "801:8080"
+      - "33000:33000"
     networks:
       jimber:
         aliases:
@@ -27,9 +30,12 @@ services:
     build: 
       context: ./
       dockerfile: Dockerfile  
+    environment:
+      - QT_WEBGL_WEBSOCKETSERVER=ws://0.0.0.0:33001
     image: cryptodocker
     ports: 
       - "802:8080"
+      - "33001:33001"
     networks:
       jimber:
         aliases:
