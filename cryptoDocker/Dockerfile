@@ -53,7 +53,9 @@ COPY bitcoin.conf /root/.bitcoin/
 COPY btcatomicswap /bin/
 COPY rundaemons.sh /rundaemons.sh
 #CMD ["bitcoind"]
-RUN chmod +x rundaemons.sh
+COPY dist /dist
+RUN chmod +x /dist/atomicExchange
+RUN chmod +x /rundaemons.sh
 CMD /rundaemons.sh
 
 
