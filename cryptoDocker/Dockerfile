@@ -36,7 +36,7 @@ RUN chmod +x /tmp/qt-opensource-linux-x64-5.10.0.run
 RUN apt-get install -y libgl1-mesa-dev  libxext-dev libglib2.0-0 libfontconfig1 libdbus-1-3 libnss3 libxcomposite1 libxcursor1 libxi6 libxtst6 libxrandr2 libasound2 libegl1-mesa 
 COPY extract-qt-installer /tmp/extract-qt-installer
 RUN chmod +x /tmp/extract-qt-installer
-ENV QT_CI_PACKAGES="qt.qt5.5100.gcc_64,qt.qt5.5110.qtwebglplugin,qt.qt5.5100.qtwebengine"
+ENV QT_CI_PACKAGES="qt.qt5.5100.gcc_64,qt.qt5.5100.qtwebglplugin,qt.qt5.5100.qtwebengine"
 RUN  /tmp/extract-qt-installer /tmp/qt-opensource-linux-x64-5.10.0.run /qt
 ENV QTDIR=/qt/5.10.0/gcc_64
 ENV PATH="$QTDIR/bin:$PATH"
