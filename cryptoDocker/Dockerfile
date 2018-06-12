@@ -1,7 +1,7 @@
 FROM ubuntu:16.04
 
 RUN apt-get -qq update
-RUN apt-get install -qq -y build-essential libtool autotools-dev autoconf libssl-dev libboost-all-dev software-properties-common python-software-properties git curl
+RUN apt-get install -qq -y build-essential libtool autotools-dev autoconf libssl-dev libboost-all-dev software-properties-common python-software-properties git curl jq wget
 RUN add-apt-repository ppa:bitcoin/bitcoin
 RUN add-apt-repository ppa:longsleep/golang-backports
 
