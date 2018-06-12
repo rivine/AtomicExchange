@@ -1,8 +1,7 @@
 FROM ubuntu:16.04
 
-RUN echo test > /test
 RUN apt-get -qq update
-RUN apt-get install -qq -y build-essential libtool autotools-dev autoconf libssl-dev libboost-all-dev software-properties-common python-software-properties git curl wget jq
+RUN apt-get install -qq -y build-essential libtool autotools-dev autoconf libssl-dev libboost-all-dev software-properties-common python-software-properties git curl
 RUN add-apt-repository ppa:bitcoin/bitcoin
 RUN add-apt-repository ppa:longsleep/golang-backports
 
@@ -50,13 +49,13 @@ ENV PATH=$PATH:/root/go/bin/
 
 RUN go get -u github.com/threefoldfoundation/tfchain/cmd/...
 
-COPY dist /dist
-
 COPY bitcoin.conf /root/.bitcoin/
 COPY btcatomicswap /bin/
 COPY rundaemons.sh /rundaemons.sh
 #CMD ["bitcoind"]
+RUN chmod +x rundaemons.sh
 CMD /rundaemons.sh
+
 
 #
 
