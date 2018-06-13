@@ -36,11 +36,12 @@ def print_json(step, stepName, data):
 
 class AtomicSwap():
 
-    def __init__(self, init_amount, part_amount, dry_run):
+    def __init__(self, init_amount, part_amount, host,dry_run):
         
         self.init_amount = init_amount
         self.part_amount = part_amount
         self.dry_run = dry_run
+        self.host = host
 
     def execute(self, process):
  
@@ -67,7 +68,7 @@ class AtomicSwap():
         # Step 1 - Initiating Exchange, Confirming amounts, exchanging recipient addresses for Contracts
 
             # Opening Connection
-        channel = grpc.insecure_channel('localhost:50051')
+        channel = grpc.insecure_channel(self.host + ':50051')
         stub = atomicswap_pb2_grpc.AtomicSwapStub(channel)
 
             # Generate Initiator Address on Participant chain
@@ -83,18 +84,18 @@ class AtomicSwap():
 
 
         # Step 2 - Initiator Atomicswap Contract with Participant address
-            
+
             # Create Atomicswap contract on Initiator chain using Participant address as Redeem Recipient
         init_ctc_json = self.execute("btcatomicswap --testnet --rpcuser=user --rpcpass=pass -s localhost:8332 initiate {} {}".format(response.part_addr, self.init_amount))
 
             # Convert JSON output to Python Object
-        init_ctc = json2obj(init_ctc_json)       
+        init_ctc = json2obj(init_ctc_json)
 
             # RPC #2 to Participant, 
             # IF Participant agrees with the Initiator Contract,
             # Returns Participant Contract Redeem Address
-        response = stub.ProcessInitiateSwap(atomicswap_pb2.InitiateSwap(init_ctc_redeem_addr=init_ctc.redeem_addr, init_ctc_hex=init_ctc.ctc_hex, init_ctc_tx_hex=init_ctc.tx_hex, hashed_secret=init_ctc.hashed_secret))
-            
+        response = stub.ProcessInitiateSwap(atomicswap_pb2.InitiateSwap(init_ctc_redeem_addr=init_ctc.redeemAddr, init_ctc_hex=init_ctc.contractHex, init_ctc_tx_hex=init_ctc.transactionHex, hashed_secret=init_ctc.hashedSecret))
+
             # Print Step Info
         print_json(2, "Atomicswap Contracts created, waiting until visible", self.step_two_data(init_ctc, response))
 
@@ -111,6 +112,7 @@ class AtomicSwap():
         # Step 3 - Initiator Fulfills Participant Contract with Redeem Transaction, Reveals Secret
 
             # Make Redeem Transaction
+
         self.execute("tfchainc atomicswap redeem {} {}".format(response.part_ctc_redeem_addr, init_ctc.secret))
             
             # RPC #3 to Participant,
@@ -137,9 +139,9 @@ class AtomicSwap():
 
     def step_two_data(self, ic, r):
         data = {}
-        data['initiatorContractRedeemAddress'] = ic.redeem_addr
-        data['initiatorContractContractHex'] = ic.ctc_hex
-        data['initiatorContractTransactionHex'] = ic.tx_hex
+        data['initiatorContractRedeemAddress'] = ic.redeemAddr
+        data['initiatorContractContractHex'] = ic.contractHex
+        data['initiatorContractTransactionHex'] = ic.transactionHex
         data['participantContractRedeemAddress'] = r.part_ctc_redeem_addr
         data['initiatorAddress'] = self.init_addr
         return data
@@ -160,14 +162,16 @@ if __name__ == '__main__':
     parser.add_option("-o", "--other-amount",
                     dest="part_amount", default=True,
                     help="The amount of the other partners currency to swap")
-    
+
+    parser.add_option("-i", "--ipaddr",
+                    dest="host", default=True,
+                    help="The host")
+
     parser.add_option("-d", "--dry-run", action="store_true",
                         dest="dry_run",  help="Do a dry run with dummy data")
 
-   
-    
     (options, args) = parser.parse_args()
     dry_run = options.dry_run
   
-    atomic_swap = AtomicSwap(float(options.init_amount), float(options.part_amount), dry_run)
+    atomic_swap = AtomicSwap(float(options.init_amount), float(options.part_amount), options.host, dry_run)
     atomic_swap.run()

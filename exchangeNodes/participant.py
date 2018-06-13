@@ -74,20 +74,20 @@ class AtomicSwap(atomicswap_pb2_grpc.AtomicSwapServicer):
         #####################
 
         # Step 1 - Initiate Request received, Confirming amounts, exchanging recipient addresses for Contracts
-        
+
             # Generating Participant Address on Initiator chain
-        self.part_addr = self.execute("bitcoin-cli getnewaddress "" legacy")
+        self.part_addr = self.execute('bitcoin-cli getnewaddress \"\" legacy')
 
             # Saving Initiator Address for Contract creation step
         self.init_addr = request.init_addr
-            
+
             # Print Step info to UI
         print_json(1, "Sent Atomicswap request confirmation with Participant Address", self.step_one_data(request))
 
             # RPC response to Initiate Request
             # Returns Participant Address
         return atomicswap_pb2.InitiateReply(part_addr=self.part_addr)
-    
+
     def ProcessInitiateSwap(self, request, context):
 
         # Step 2 - Initiator Contract details received, Creating Participant Contract
@@ -97,15 +97,15 @@ class AtomicSwap(atomicswap_pb2_grpc.AtomicSwapServicer):
         self.init_ctc_tx_hex = request.init_ctc_tx_hex
 
             # Create Atomicswap Contract on Participant chain using Initiator Address as Redeem Recipient
-        part_ctc_json = self.execute("tfchainc atomicswap participate {} {} {}".format(self.init_addr, self.part_amount, request.hashed_secret))
+        part_ctc_json = self.execute("tfchainc atomicswap --encoding json -y participate {} {} {}".format(self.init_addr, self.part_amount, request.hashed_secret))
         part_ctc = json2obj(part_ctc_json)
 
             # Print Step info to UI
         print_json(2, "Saved Initiator Contract Details and Created Participant Contract", self.step_two_data(request, part_ctc))
-            
+
             # RPC response to Create Contract request
             # Returns Participant Contract Redeem Address
-        return atomicswap_pb2.AcceptSwap(part_ctc_redeem_addr=part_ctc.redeem_addr)
+        return atomicswap_pb2.AcceptSwap(part_ctc_redeem_addr=part_ctc.outputid)
 
 
     def ProcessRedeemed(self,request,context):
@@ -142,7 +142,7 @@ class AtomicSwap(atomicswap_pb2_grpc.AtomicSwapServicer):
         data['initiatorContractTransactionHex'] = r.init_ctc_tx_hex
         data['initiatorContractRedeemAddress'] = r.init_ctc_redeem_addr
         data['hashedSecret'] = r.hashed_secret
-        data['participantContractRedeemAddress'] = pc.redeem_addr
+        data['participantContractRedeemAddress'] = pc.outputid
         return data
 
     def step_three_data(self):
