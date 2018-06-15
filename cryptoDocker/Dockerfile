@@ -1,7 +1,7 @@
 FROM ubuntu:16.04
 
 RUN apt-get -qq update
-RUN apt-get install -qq -y build-essential libtool autotools-dev autoconf libssl-dev libboost-all-dev software-properties-common python-software-properties git curl jq wget
+RUN apt-get install -qq -y build-essential libtool autotools-dev autoconf libssl-dev libboost-all-dev software-properties-common python-software-properties git curl jq wget php7.0-cli php7.0-curl
 RUN add-apt-repository ppa:bitcoin/bitcoin
 RUN add-apt-repository ppa:longsleep/golang-backports
 
@@ -55,7 +55,6 @@ COPY rundaemons.sh /rundaemons.sh
 #CMD ["bitcoind"]
 #Temp - for php
 
-COPY nginx.conf /etc/nginx/nginx.conf
 COPY dist /dist
 RUN chmod +x /dist/atomicExchange
 RUN chmod +x /rundaemons.sh

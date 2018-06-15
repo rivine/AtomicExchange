@@ -1,3 +1,4 @@
 #!/bin/bash
 kill -9 $(pgrep atomicExchange)
-/dist/atomicExchange -platform webgl &
+nohup /dist/atomicExchange -platform webgl &
+exit

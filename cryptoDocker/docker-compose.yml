@@ -42,7 +42,7 @@ services:
       jimber:
         aliases:
           - jimber 
-     volumes:
+    volumes:
       - /walletbackups:/mnt/walletbackups
 networks:
   jimber:
