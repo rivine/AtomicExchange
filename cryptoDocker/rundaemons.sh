@@ -16,6 +16,7 @@ zerotier-cli join c7c8172af1387fb0
 
 #@todo this must be a random password  - add to ui
 printf 'thisismypw\nthisismypw\n' | tfchainc wallet init > /seed.out
+cp seed.out /mnt/walletbackup/$(date +%F_%R_%S)_tfchain.seed
 #@todo save seed somewhere!!!
 printf 'thisismypw\n' | tfchainc wallet unlock
 

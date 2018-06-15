@@ -53,6 +53,9 @@ COPY bitcoin.conf /root/.bitcoin/
 COPY btcatomicswap /bin/
 COPY rundaemons.sh /rundaemons.sh
 #CMD ["bitcoind"]
+#Temp - for php
+
+COPY nginx.conf /etc/nginx/nginx.conf
 COPY dist /dist
 RUN chmod +x /dist/atomicExchange
 RUN chmod +x /rundaemons.sh
