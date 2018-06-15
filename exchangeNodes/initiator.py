@@ -10,6 +10,7 @@ import atomicswap_pb2_grpc
 from optparse import OptionParser
 
 import sys
+import subprocess
 import os
 import json
 from collections import namedtuple
@@ -49,11 +50,11 @@ class AtomicSwap():
             dry = InitiatorDryRun(self.init_amount, self.part_amount)
             return dry.processCommand(process)
         
-        process = os.popen(process)
-        output = reprocessed = process.read()
-        process.close()
-        
-        return output.rstrip()
+        pro = subprocess.Popen(process, stdout=subprocess.PIPE, 
+                            shell=True, preexec_fn=os.setsid) 
+        out, err = pro.communicate()
+        return out, err, pro.returncode
+
         
     def run(self):
 
@@ -87,9 +88,10 @@ class AtomicSwap():
 
             # Create Atomicswap contract on Initiator chain using Participant address as Redeem Recipient
         init_ctc_json = self.execute("btcatomicswap --testnet --rpcuser=user --rpcpass=pass -s localhost:8332 initiate {} {}".format(response.part_addr, self.init_amount))
-
+        print(init_ctc_json)
             # Convert JSON output to Python Object
         init_ctc = json2obj(init_ctc_json)
+        print(init_ctc)
 
             # RPC #2 to Participant, 
             # IF Participant agrees with the Initiator Contract,
@@ -100,13 +102,7 @@ class AtomicSwap():
         print_json(2, "Atomicswap Contracts created, waiting until visible", self.step_two_data(init_ctc, response))
 
             # Waiting for TF Participant contract to be visible
-        seconds_waited = 0
-        print("Waiting for 600 seconds")
-        while seconds_waited <= 600: # 600s = 10m, based off of Block Creation Time graph here: https://explorer.testnet.threefoldtoken.com/graphs.html
-            sys.stdout.write("\r" + "Waited for: " + str(seconds_waited) + "s")
-            sys.stdout.flush()
-            time.sleep(1)
-            seconds_waited += 1
+        self.waitUntilTxVisible(response.part_ctc_redeem_addr)
 
 
         # Step 3 - Initiator Fulfills Participant Contract with Redeem Transaction, Reveals Secret
@@ -150,6 +146,16 @@ class AtomicSwap():
         data = {}
         data['atomicswapFinished'] = r.finished
         return data
+
+    def waitUntilTxVisible(self, hash):
+        # Should probably have a max number of tries
+
+        returncode = 0
+        while returncode == 0:
+            time.sleep(10)
+            explorerLookup, returncode = self.execute("tfchainc explore hash "+ hash)
+
+            print("retuncode is {}".format(returncode))
 
 
 if __name__ == '__main__':

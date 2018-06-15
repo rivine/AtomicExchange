@@ -90,11 +90,22 @@ class AtomicSwap(atomicswap_pb2_grpc.AtomicSwapServicer):
 
     def ProcessInitiateSwap(self, request, context):
 
-        # Step 2 - Initiator Contract details received, Creating Participant Contract
+        # Step 2 - Initiator Contract details received, Auditing it
+
+        #    # Run Audit command
+        # part_ctc_audit_json =  self.execute("btcatomicswap --testnet --rpcuser=user --rpcpass=pass -s localhost:8332 auditcontract {} {}".format(request.contractHex, request.transactionHex)) 
+        # part_ctc_audit = json2obj(part_ctc_audit_json)
+
+        # if all(part_ctc_audit.verifications.values):
+        #    print("Initiator Contract Audit Successful")
+        # else:
+        #    print("Initiator Contract Audit Failed")
+        #    exit(1)
 
             # Saving Initiator Contract and Transaction hexstrings for Redeem Step
         self.init_ctc_hex = request.init_ctc_hex
         self.init_ctc_tx_hex = request.init_ctc_tx_hex
+        self.init_ctc_redeem_addr = request.init_ctc_redeem_addr
 
             # Create Atomicswap Contract on Participant chain using Initiator Address as Redeem Recipient
         part_ctc_json = self.execute("tfchainc atomicswap --encoding json -y participate {} {} {}".format(self.init_addr, self.part_amount, request.hashed_secret))
@@ -111,6 +122,9 @@ class AtomicSwap(atomicswap_pb2_grpc.AtomicSwapServicer):
     def ProcessRedeemed(self,request,context):
 
         # Step 3 - Initiator has revealed Secret, Redeeming Initiator Contract
+            
+            # Wait until contract is revealed
+        self.waitUntilTxVisible(self.init_ctc_redeem_addr)
 
             # Make Redeem Transaction
         self.execute("btcatomicswap --testnet --rpcuser=user --rpcpass=pass -s localhost:8332 redeem {} {} {}".format(self.init_ctc_hex, self.init_ctc_tx_hex, request.secret))
@@ -149,6 +163,16 @@ class AtomicSwap(atomicswap_pb2_grpc.AtomicSwapServicer):
         data = {}
         data['finished'] = "true"
         return data
+
+    def waitUntilTxVisible(self, hash):
+        while True:
+            try:
+                btc_tx_json = urllib2.urlopen("https://test-insight.bitpay.com/api/addr/"+ hash).read()
+                btc_tx = json2obj(btc_tx_json)
+                break
+            except Exception as e:
+                print(e, 'Trying again in 10 seconds...')
+                time.sleep(10)
 
 
 def serve(init_amount, part_amount, dry_run):
