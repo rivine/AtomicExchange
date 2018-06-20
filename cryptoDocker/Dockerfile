@@ -58,6 +58,8 @@ COPY rundaemons.sh /rundaemons.sh
 COPY dist /dist
 RUN chmod +x /dist/atomicExchange
 RUN chmod +x /rundaemons.sh
+RUN mkdir -p /crypto/btc 
+RUN mkdir -p /crypto/tft
 CMD /rundaemons.sh
 
 
