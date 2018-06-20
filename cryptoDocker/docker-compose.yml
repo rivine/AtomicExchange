@@ -33,7 +33,7 @@ services:
       context: ./
       dockerfile: Dockerfile  
     environment:
-      - QT_WEBGL_WEBSOCKETSERVER=ws://0.0.0.0:33001
+      - QT_WEBGL_WEBSOCKETSERVER=ws://0.0.0.0:33000
     image: cryptodocker
     ports: 
       - "802:8080"
@@ -55,11 +55,11 @@ services:
       context: ./
       dockerfile: Dockerfile  
     environment:
-      - QT_WEBGL_WEBSOCKETSERVER=ws://0.0.0.0:33001
+      - QT_WEBGL_WEBSOCKETSERVER=ws://0.0.0.0:33000
     image: cryptodocker
     ports: 
-      - "802:8080"
-      - "33001:33001"
+      - "803:8080"
+      - "33002:33000"
     networks:
       jimber:
         aliases:
