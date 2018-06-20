@@ -44,6 +44,29 @@ services:
           - jimber 
     volumes:
       - /walletbackups:/mnt/walletbackups
+  exchangepartyc:
+    container_name: exchangepartyc
+    hostname: exchangepartyc
+    devices:
+      - "/dev/net/tun:/dev/net/tun"
+    cap_add:
+      - NET_ADMIN
+    build: 
+      context: ./
+      dockerfile: Dockerfile  
+    environment:
+      - QT_WEBGL_WEBSOCKETSERVER=ws://0.0.0.0:33001
+    image: cryptodocker
+    ports: 
+      - "802:8080"
+      - "33001:33001"
+    networks:
+      jimber:
+        aliases:
+          - jimber 
+    volumes:
+      - /walletbackups:/mnt/walletbackups
+      - /crypto/exchangepartyc:/crypto
 networks:
   jimber:
     external:
