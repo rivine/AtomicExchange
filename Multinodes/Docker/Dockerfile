@@ -13,8 +13,7 @@ RUN apt-get update
 RUN apt-get install -y openresty 
 
 
-COPY Routes /usr/local/openresty/nginx/conf/Route
-RUN chmod +x /home/app/wait-for
+COPY Routes /usr/local/openresty/nginx/conf/Routes
 COPY static /usr/local/openresty/nginx/html/
 
 WORKDIR /home/app
