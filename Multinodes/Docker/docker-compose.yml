@@ -1,6 +1,6 @@
 version: "3"
 services:
-  arta_apigateway:
+  jimber_gw:
     container_name: jimber.gw
     hostname: jimber.gw
     build: 
