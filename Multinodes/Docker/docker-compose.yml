@@ -1,0 +1,19 @@
+version: "3"
+services:
+  arta_apigateway:
+    container_name: jimber.gw
+    hostname: jimber.gw
+    build: 
+      context: ./
+      dockerfile: Dockerfile
+    image: jimber.gw
+    ports: 
+      - "80:80"
+    networks:
+      jimber:
+        aliases:
+          - jimber
+networks:
+  jimber:
+    external:
+      name: jimber

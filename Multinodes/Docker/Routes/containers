@@ -1,0 +1,4 @@
+location ~* /wallets/(.*) {
+    proxy_set_header Host            $host:$server_port/authentication;
+    proxy_pass http://$a:8080/$is_args$args;
+}
