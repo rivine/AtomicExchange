@@ -18,6 +18,7 @@ services:
       - "33000:33000"
     volumes:
       - /walletbackups:/mnt/walletbackups
+      - /crypto/exchangepartya:/crypto
     networks:
       jimber:
         aliases:
@@ -44,6 +45,7 @@ services:
           - jimber 
     volumes:
       - /walletbackups:/mnt/walletbackups
+      - /crypto/exchangepartyb:/crypto
   exchangepartyc:
     container_name: exchangepartyc
     hostname: exchangepartyc
