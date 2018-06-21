@@ -14,7 +14,7 @@ services:
       - QT_WEBGL_WEBSOCKETSERVER=ws://0.0.0.0:33000
     image: cryptodocker
     ports: 
-      - "801:8080"
+      - "80:8080"
       - "33000:33000"
     volumes:
       - /walletbackups:/mnt/walletbackups
@@ -37,7 +37,7 @@ services:
       - QT_WEBGL_WEBSOCKETSERVER=ws://0.0.0.0:33000
     image: cryptodocker
     ports: 
-      - "802:8080"
+      - "80:8080"
       - "33001:33001"
     networks:
       jimber:
@@ -60,7 +60,7 @@ services:
       - QT_WEBGL_WEBSOCKETSERVER=ws://0.0.0.0:33000
     image: cryptodocker
     ports: 
-      - "803:8080"
+      - "80:8080"
       - "33002:33000"
     networks:
       jimber:
