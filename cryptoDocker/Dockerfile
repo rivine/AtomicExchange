@@ -41,7 +41,7 @@ ENV QTDIR=/qt/5.11.1/gcc_64
 ENV PATH="$QTDIR/bin:$PATH"
 ENV LD_LIBRARY_PATH="$QTDIR/lib:$LD_LIBRARY_PATH"
 ENV QT_DEBUG_PLUGINS=1
-COPY libqwebgl.so /qt/5.11.1/gcc_64/plugins/platforms/
+#COPY libqwebgl.so /qt/5.11.1/gcc_64/plugins/platforms/
 
 #ENV GOROOT=/usr/local/go
 #ENV GOPATH=/root/go
