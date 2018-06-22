@@ -1,9 +1,15 @@
 FROM ubuntu:16.04
 
 RUN apt-get -qq update
-RUN apt-get install -qq -y build-essential libtool autotools-dev autoconf libssl-dev libboost-all-dev software-properties-common python-software-properties git curl jq wget php7.0-cli php7.0-curl
+RUN apt-get install -qq -y build-essential libtool autotools-dev autoconf libssl-dev libboost-all-dev software-properties-common python-software-properties git curl jq wget php7.0-cli php7.0-curl iputils-ping python-concurrent.futures python-pip
 RUN add-apt-repository ppa:bitcoin/bitcoin
 RUN add-apt-repository ppa:longsleep/golang-backports
+
+ENV ATOMIC_JSON=true
+
+RUN python -m pip install grpcio
+RUN python -m pip install grpcio-tools
+
 
 ## ZEROTIER
 RUN apt-get -y install supervisor && \
@@ -41,7 +47,6 @@ ENV QTDIR=/qt/5.11.1/gcc_64
 ENV PATH="$QTDIR/bin:$PATH"
 ENV LD_LIBRARY_PATH="$QTDIR/lib:$LD_LIBRARY_PATH"
 ENV QT_DEBUG_PLUGINS=1
-COPY libqwebgl.so /qt/5.11.1/gcc_64/plugins/platforms/
 
 #ENV GOROOT=/usr/local/go
 #ENV GOPATH=/root/go
