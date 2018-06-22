@@ -28,7 +28,8 @@ fi
 printf 'thisismypw\n' | tfchainc wallet unlock
 
 
-sleep 60
+export QT_WEBGL_WEBSOCKETSERVER_EXTERNAL=$EXTERNALURL$(hostname)
+echo $QT_WEBGL_WEBSOCKETSERVER_EXTERNAL
 /dist/atomicExchange -platform webgl &
 
 tail -f /dev/null

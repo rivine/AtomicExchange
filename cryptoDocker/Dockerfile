@@ -41,7 +41,7 @@ ENV QTDIR=/qt/5.11.1/gcc_64
 ENV PATH="$QTDIR/bin:$PATH"
 ENV LD_LIBRARY_PATH="$QTDIR/lib:$LD_LIBRARY_PATH"
 ENV QT_DEBUG_PLUGINS=1
-#COPY libqwebgl.so /qt/5.11.1/gcc_64/plugins/platforms/
+COPY libqwebgl.so /qt/5.11.1/gcc_64/plugins/platforms/
 
 #ENV GOROOT=/usr/local/go
 #ENV GOPATH=/root/go
@@ -54,7 +54,7 @@ COPY btcatomicswap /bin/
 COPY rundaemons.sh /rundaemons.sh
 #CMD ["bitcoind"]
 #Temp - for php
-ENV QT_WEBGL_WEBSOCKETSERVER_EXTERNAL="ws://195.134.212.38:8080/wallets/ws"
+
 
 COPY dist /dist
 RUN chmod +x /dist/atomicExchange
