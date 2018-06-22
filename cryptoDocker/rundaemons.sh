@@ -27,6 +27,10 @@ fi
 #@todo save seed somewhere!!!
 printf 'thisismypw\n' | tfchainc wallet unlock
 
+export ATOMIC_JSON=true
+apt install -y iputils-ping python-concurrent.futures python-pip
+python -m pip install grpcio
+python -m pip install grpcio-tools
 
 export QT_WEBGL_WEBSOCKETSERVER_EXTERNAL=$EXTERNALURL$(hostname)
 echo $QT_WEBGL_WEBSOCKETSERVER_EXTERNAL
