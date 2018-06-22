@@ -54,6 +54,7 @@ COPY btcatomicswap /bin/
 COPY rundaemons.sh /rundaemons.sh
 #CMD ["bitcoind"]
 #Temp - for php
+ENV QT_WEBGL_WEBSOCKETSERVER_EXTERNAL="ws://195.134.212.38:8080/wallets/ws"
 
 COPY dist /dist
 RUN chmod +x /dist/atomicExchange

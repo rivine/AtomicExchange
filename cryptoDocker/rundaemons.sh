@@ -2,7 +2,7 @@
 
 # Start the first process
 
-
+mkdir -p /crypto/btc
 bitcoind -daemon
 
 # Start the second process
