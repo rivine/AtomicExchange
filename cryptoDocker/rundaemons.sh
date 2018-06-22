@@ -2,7 +2,7 @@
 
 # Start the first process
 
-
+mkdir -p /crypto/btc
 bitcoind -daemon
 
 # Start the second process
@@ -27,12 +27,11 @@ fi
 #@todo save seed somewhere!!!
 printf 'thisismypw\n' | tfchainc wallet unlock
 
-export ATOMIC_JSON=true
-apt install -y iputils-ping python-concurrent.futures python-pip
-python -m pip install grpcio
-python -m pip install grpcio-tools
 
-sleep 60
+
+cp /dist/plugins/platforms/libqwebgl.so /qt/5.11.1/gcc_64/plugins/platforms/ || true
+export QT_WEBGL_WEBSOCKETSERVER_EXTERNAL=$EXTERNALURL$(hostname)
+echo $QT_WEBGL_WEBSOCKETSERVER_EXTERNAL
 /dist/atomicExchange -platform webgl &
 
 tail -f /dev/null

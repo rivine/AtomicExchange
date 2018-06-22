@@ -14,7 +14,6 @@ RUN apt-get install -y openresty
 
 
 COPY Routes /usr/local/openresty/nginx/conf/Routes
-COPY static /usr/local/openresty/nginx/html/
 COPY nginx.conf /usr/local/openresty/nginx/conf/nginx.conf
 WORKDIR /home/app
 CMD /usr/local/openresty/nginx/sbin/nginx -g "daemon off;"
