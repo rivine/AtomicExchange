@@ -79,6 +79,7 @@ class AtomicSwap(atomicswap_pb2_grpc.AtomicSwapServicer):
         self.part_addr = self.execute('bitcoin-cli getnewaddress \"\" legacy')
 
             # Saving Initiator Address for Contract creation step
+        print(request.init_addr)
         self.init_addr = request.init_addr
 
             # Print Step info to UI
@@ -106,6 +107,10 @@ class AtomicSwap(atomicswap_pb2_grpc.AtomicSwapServicer):
         self.init_ctc_hex = request.init_ctc_hex
         self.init_ctc_tx_hex = request.init_ctc_tx_hex
         self.init_ctc_redeem_addr = request.init_ctc_redeem_addr
+
+        print(self.init_addr)
+        print(self.part_amount)
+        print(request.hashed_secret)
 
             # Create Atomicswap Contract on Participant chain using Initiator Address as Redeem Recipient
         part_ctc_json = self.execute("tfchainc atomicswap --encoding json -y participate {} {} {}".format(self.init_addr, self.part_amount, request.hashed_secret))
@@ -169,10 +174,13 @@ class AtomicSwap(atomicswap_pb2_grpc.AtomicSwapServicer):
             try:
                 btc_tx_json = urllib2.urlopen("https://test-insight.bitpay.com/api/addr/"+ hash).read()
                 btc_tx = json2obj(btc_tx_json)
-                break
+                print("txApperances(it's appeArances btw...): " + str(btc_tx.txApperances))
+                if btc_tx.txApperances > 0:
+                    break
             except Exception as e:
                 print(e, 'Trying again in 10 seconds...')
                 time.sleep(10)
+        
 
 
 def serve(init_amount, part_amount, dry_run):

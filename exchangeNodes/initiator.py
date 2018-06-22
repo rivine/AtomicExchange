@@ -73,11 +73,13 @@ class AtomicSwap():
         stub = atomicswap_pb2_grpc.AtomicSwapStub(channel)
 
             # Generate Initiator Address on Participant chain
-        self.init_addr = self.execute("tfchainc wallet address")[21:] # removing substring, JSON output in future?
-
+        self.init_addr, _, _ = self.execute("tfchainc wallet address")
+        self.init_addr = self.init_addr[21:] # removing substring, JSON output in future?
+        self.init_addr = self.init_addr.rstrip("\r\n")
             # RPC #1 to Participant,
             # IF Participant agrees with amounts,
             # Returns Participant Address 
+      
         response = stub.ProcessInitiate(atomicswap_pb2.Initiate(init_amount=self.init_amount, part_amount=self.part_amount, init_addr=self.init_addr))
 
             # Print Step Info
@@ -87,11 +89,14 @@ class AtomicSwap():
         # Step 2 - Initiator Atomicswap Contract with Participant address
 
             # Create Atomicswap contract on Initiator chain using Participant address as Redeem Recipient
-        init_ctc_json = self.execute("btcatomicswap --testnet --rpcuser=user --rpcpass=pass -s localhost:8332 initiate {} {}".format(response.part_addr, self.init_amount))
-        print(init_ctc_json)
+        print("Here we are")
+        init_ctc_cmd = "btcatomicswap --testnet --rpcuser=user --rpcpass=pass -s localhost:8332 initiate {} {}".format(response.part_addr, self.init_amount)
+        print(init_ctc_cmd)
+        init_ctc_json, _, _ = self.execute(init_ctc_cmd)
             # Convert JSON output to Python Object
+        print("This is the init_ctc_json" + init_ctc_json)
         init_ctc = json2obj(init_ctc_json)
-        print(init_ctc)
+        print("This is the init_ctc" + init_ctc_json)
 
             # RPC #2 to Participant, 
             # IF Participant agrees with the Initiator Contract,
@@ -109,7 +114,7 @@ class AtomicSwap():
 
             # Make Redeem Transaction
 
-        self.execute("tfchainc atomicswap redeem {} {}".format(response.part_ctc_redeem_addr, init_ctc.secret))
+        self.execute("tfchainc atomicswap --encoding json -y redeem {} {}".format(response.part_ctc_redeem_addr, init_ctc.secret))
             
             # RPC #3 to Participant,
             # IF Participant makes Redeem Transaction,
@@ -150,12 +155,11 @@ class AtomicSwap():
     def waitUntilTxVisible(self, hash):
         # Should probably have a max number of tries
 
-        returncode = 0
-        while returncode == 0:
+        returncode = 1
+        while returncode != 0:
             time.sleep(10)
-            explorerLookup, returncode = self.execute("tfchainc explore hash "+ hash)
+            _, _, returncode = self.execute("tfchainc explore hash "+ hash)
 
-            print("retuncode is {}".format(returncode))
 
 
 if __name__ == '__main__':
