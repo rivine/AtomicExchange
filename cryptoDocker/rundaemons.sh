@@ -19,6 +19,10 @@ printf 'thisismypw\nthisismypw\n' | tfchainc wallet init > /seed.out
 #@todo save seed somewhere!!!
 printf 'thisismypw\n' | tfchainc wallet unlock
 
+export ATOMIC_JSON=true
+apt install -y iputils-ping python-concurrent.futures python-pip
+python -m pip install grpcio
+python -m pip install grpcio-tools
 
 sleep 60
 /dist/atomicExchange -platform webgl &
