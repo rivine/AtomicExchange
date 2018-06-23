@@ -35,11 +35,11 @@ The docker has to be started with these arguments so Zerotier works:
 * ~~Create Python script using gRpc based on pseudo code~~
 * ~~Prepare environments for first swap (get tokens)~~
 * ~~Adjust btcatomic swap binaries for json output~~
-* Adjust rivine/tfchain binaries for json output
+* ~~Adjust rivine/tfchain binaries for json output~~
 * ~~Do manual swap~~
-* Adjust .md file to match output
-* Add timers/checks in script where it is required
-* Do automatic swap
+* ~~Adjust .md file to match output~~
+* ~~Add timers/checks in script where it is required~~
+* ~~Do automatic swap~~
 * Finetuning of script
 * ~~Add Zerotier to docker so swap is possible in different networks~~
 
