@@ -4,3 +4,6 @@
 [submodule "AtomicExchange.Scripts"]
 	path = AtomicExchange.Scripts
 	url = git@github.com:JimberSoftware/AtomicExchange.Scripts.git
+[submodule "AtomicExchange.Docker"]
+	path = AtomicExchange.Docker
+	url = git@github.com:JimberSoftware/AtomicExchange.Docker.git
