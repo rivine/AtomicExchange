@@ -11,13 +11,13 @@ The flow is based on this [readme](https://github.com/rivine/rivine/blob/master/
 
 Flow overview:
 
-![exchangeflow](exchangeflow.png)
+![exchangeflow](AtomicExchange.Docs/exchangeflow.png)
 
 This is a simplified flow since Blockchain technology needs time to get the nodes into sync. It will be required to poll the Blockchain (or get an event) to continue the flow when the required data is available.
 
 ## Architecture 
 
-![architecture](architecture.png)
+![architecture](AtomicExchange.Docs/architecture.png)
 
 Two environments will be needed. One will contain full blockchain nodes (or the least implementation needed for a simple wallet). Another one will contain the command line tools (bitcoin-cli / rivinec) to communicate with the nodes and all the required scripts and Ui implementation. In a later phase an orderbook will be added and we will use distributed lightweight wallets.
 
