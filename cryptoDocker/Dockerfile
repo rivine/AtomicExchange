@@ -8,7 +8,7 @@ RUN add-apt-repository ppa:longsleep/golang-backports
 ENV ATOMIC_JSON=true
 
 RUN python -m pip install grpcio
-RUN python -m pip install grpcio-tools
+
 
 
 ## ZEROTIER
