@@ -1,9 +1,9 @@
 [submodule "AtomicExchange.Ui"]
 	path = AtomicExchange.Ui
-	url = git@github.com:JimberSoftware/AtomicExchange.Ui.git
+	url = git@github.com:rivine/AtomicExchange.Ui.git
 [submodule "AtomicExchange.Scripts"]
 	path = AtomicExchange.Scripts
-	url = git@github.com:JimberSoftware/AtomicExchange.Scripts.git
+	url = git@github.com:rivine/AtomicExchange.Scripts.git
 [submodule "AtomicExchange.Docker"]
 	path = AtomicExchange.Docker
-	url = git@github.com:JimberSoftware/AtomicExchange.Docker.git
+	url = git@github.com:rivine/AtomicExchange.Docker.git
