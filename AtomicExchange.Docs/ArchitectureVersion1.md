@@ -11,7 +11,7 @@ For integration with Jumpscale these are the requirements:
 - TFT light wallet integration [More info](https://github.com/Jumpscale/lib9/tree/development/JumpScale9Lib/clients/rivine#how-to-use-atomicswap)
 - BTC Electrum atomic swap integration [More info/source code](https://github.com/robvanmieghem/electrumatomicswap)
 - Automated, decentralized atomic swap from Jumpscale
-  - Current implementation is not decentralized, both parties should trust one script [More info] (https://github.com/Jumpscale/lib9/tree/development/JumpScale9Lib/tools/atomicswap)
+  - Current implementation is not decentralized, both parties should trust one script [More info](https://github.com/Jumpscale/lib9/tree/development/JumpScale9Lib/tools/atomicswap)
   - Atomic swap implementation can be based on the current one from v0.1 [Source code](https://github.com/rivine/AtomicExchange.Scripts)
 - Provisioning TFT/BTC wallets and using the decentralized atomic swap SAL should be possible from 0-robot api's using new templates
 
