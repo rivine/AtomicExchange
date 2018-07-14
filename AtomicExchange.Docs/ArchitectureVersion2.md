@@ -27,13 +27,13 @@ For integration with Jumpscale these are the requirements:
  - AtomicExchange UI should also be useable/deployable in Jumpscale
  
 ### Architecture
- ![architecture](./AtomicExchange.Docs/AtomicExchange-arch.png)
+ ![architecture](./AtomicExchange-arch.png)
  
 
  ## UI
 
 The UI will contain an orderbook and created based on our [mockups](https://tinyurl.com/atomicExchange). Architecture will differ in the fact that every call will use the Jumpscale/0-robot functionality providing full compatibility with the ThreeFold grid.
 
-![architecture](./AtomicExchange.Docs/AtomicExchange-Ui-Arch.png)
+![architecture](./AtomicExchange-Ui-Arch.png)
 
 TBD: Extra REST api so the possibility to build an alternative/future html/(vue.)js application. Jimber believes html applications are the way to go in the long run.
