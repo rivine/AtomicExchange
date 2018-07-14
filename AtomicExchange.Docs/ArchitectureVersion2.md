@@ -37,3 +37,6 @@ The UI will contain an orderbook and created based on our [mockups](https://tiny
 ![architecture](./AtomicExchange-Ui-Arch.png)
 
 TBD: Extra REST api so the possibility to build an alternative/future html/(vue.)js application. Jimber believes html applications are the way to go in the long run.
+
+## Orderbook
+TBD
