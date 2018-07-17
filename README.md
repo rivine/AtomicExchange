@@ -29,7 +29,11 @@ In a first phase a Dockerfile was created using to install both the bitcoind and
 
 The docker has to be started with these arguments so Zerotier works:
 --device=/dev/net/tun --cap-add=NET_ADMIN
+'''
+docker pull jimber/atomicexchange
+docker run --device=/dev/net/tun --cap-add=NET_ADMIN --cap-add=SYS_ADMIN -d --name crypto1  -v /crypto/crypto1:/crypto -e QT_WEBGL_WEBSOCKETSERVER=ws://0.0.0.0:33000 jimber/atomicexchange
 
+'''
 ## Todo
 * ~~Create pseudo code for flow~~
 * ~~Create Dockerfile with bitcoin binaries~~
