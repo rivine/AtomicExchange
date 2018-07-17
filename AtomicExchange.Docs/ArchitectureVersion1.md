@@ -29,6 +29,7 @@ For integration with Jumpscale these are the requirements:
 ### Architecture
  ![architecture](./AtomicExchange-arch.png)
  
+[Follow up here](https://docs.greenitglobe.com/gig/org_development/issues/91)
 
  ## UI
 
