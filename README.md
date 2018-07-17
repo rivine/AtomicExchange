@@ -1,7 +1,7 @@
 # AtomicExchange
 POC for Atomic cryptocurreny exchange based on atomic swaps
 
-[Development for version 1.0 has started!!](https://github.com/rivine/AtomicExchange/blob/master/AtomicExchange.Docs/ArchitectureVersion2.md)
+[Development for version 1.0 has started!!](https://github.com/rivine/AtomicExchange/blob/master/AtomicExchange.Docs/ArchitectureVersion1.md)
 
 ## Scope
 For the first POC the scope is swapping bitcoins (initiator) for TfChain/Rivine (acceptor) tokens.
